@@ -8,9 +8,16 @@
 #' @import dplyr
 #' @import stringr
 #' @import lodaR
-#' @export
-MeanSeperator <- methods::setRefClass(
-  'MeanSeperator',
+#'
+#' @param data The data frame containing variables to be analyzed
+#' @param indep_var The independent or predictor variable in the data
+#' @param factor_var The factor variables in the data - Optional when `grouping var` argument is specified
+#' @param grouping_var The grouping variables in the data if there are any - Optional
+#' @param code_seperator The internal code separator defaults to `@` - Optional
+#' @exportClass Separator
+#' @export Separator
+Separator <- methods::setRefClass(
+  'Separator',
   fields = list(
     data = "data.frame",
     indep_var = "character",
@@ -37,7 +44,7 @@ MeanSeperator <- methods::setRefClass(
         factor_vars <<- c(factor_vars, indep_var)
       }
     },
-    .merge_vars = function(.self, data, mergee) {
+    .merge_vars = function(.self, data, var) {
       vars <- lapply(.self$grouping_vars, function(.x) {
         as.character(data[[.x]])
       })
@@ -58,7 +65,7 @@ MeanSeperator <- methods::setRefClass(
       }
 
       ## merge functions coded vectors with `mergee` variable
-      return(paste(vars, mergee, sep = .self$code_seperator))
+      return(paste(vars, var, sep = .self$code_seperator))
     },
     .run_post_hoc = function(.self, var) {
       if (all(is.na(.self$grouping_vars))) {

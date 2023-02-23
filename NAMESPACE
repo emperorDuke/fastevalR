@@ -2,6 +2,7 @@
 
 export(get_summary)
 export(tukey.HSD)
+exportClasses(Separator)
 import(dplyr)
 import(lodaR)
 import(purrr)
