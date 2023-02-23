@@ -39,9 +39,9 @@ Separator <- methods::setRefClass(
       if (all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
         factor_vars <<- c(grouping_vars, indep_var)
       } else if (!all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
-        factor_vars <<- c(factor_vars, grouping_vars, indep_var)
+        factor_vars <<- unique(c(factor_vars, grouping_vars, indep_var))
       } else {
-        factor_vars <<- c(factor_vars, indep_var)
+        factor_vars <<- unique(c(factor_vars, indep_var))
       }
     },
     .merge_vars = function(.self, data, var) {
@@ -102,7 +102,9 @@ Separator <- methods::setRefClass(
           .letters <- multcompView::multcompLetters(p_val)$Letters
           return(sapply(.letters, function(l) NA, simplify = F))
         } else {
-          df <- with(df, df[!is.nan(p.adj) || !is.na(p.adj),])
+          df <- suppressWarnings(
+            with(df, df[!is.nan(p.adj) || !is.na(p.adj),])
+          )
           p_val <- stats::setNames(df$p.adj, df$code)
           compare <- multcompView::multcompLetters(p_val)
           return(compare$Letters)
@@ -110,7 +112,7 @@ Separator <- methods::setRefClass(
       }
 
       if (all(is.na(.self$grouping_vars))) {
-        letters <- get_letters(post_hoc_tbl)
+        letters <- suppressWarnings(get_letters(post_hoc_tbl))
 
         return(do.call(rbind, lapply(names(letters), function(name) {
           list(name) |>
@@ -194,6 +196,12 @@ Separator <- methods::setRefClass(
     #'
     #' @return  a Data frame
     display_table = function(.self) {
+      selection_vars <- .self$factor_vars
+
+      if (all(is.na(.self$grouping_vars))) {
+        selection_vars <- .self$indep_var
+      }
+
       seperated_means_list <- .self$separate()
 
       seperated_means_list |>
@@ -201,9 +209,9 @@ Separator <- methods::setRefClass(
         lapply(function(var) {
           seperated_means_list[[var]] |>
             dplyr::mutate(dplyr::across(dplyr::all_of(var), ~ paste0(.data[[var]], .data[['letters']]))) |>
-            dplyr::select(dplyr::all_of(c(.self$factor_vars, var)))
+            dplyr::select(dplyr::all_of(c(selection_vars, var)))
         }) |>
-        purrr::reduce(~ merge(.x, .y, by = .self$factor_vars)) |>
+        purrr::reduce(~ merge(.x, .y, by = selection_vars)) |>
         dplyr::rename_with(~ lodaR::capitalize(.x))
     }
   )
