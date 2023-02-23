@@ -1,0 +1,19 @@
+Package: meanSeperator
+Type: Package
+Title: Bulk Seperation Of Mean
+Version: 0.1.0
+Author: Effiom Duke
+Maintainer: Effiom Duke <effiomduke@gmail.com>
+Description: It carries out bulk seperation of mean on every varible in the data frame and also carries out descriptive statistics.
+License: MIT + file LICENSE
+URL: https://github.com/emperorDuke/meanSeparator.git
+Encoding: UTF-8
+LazyData: true
+Imports:
+  dplyr,
+  lodaR,
+  stats,
+  methods,
+  purrr,
+  stringr
+RoxygenNote: 7.2.3
