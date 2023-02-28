@@ -1,6 +1,24 @@
-## The mean seperator pacekage
+## The mean separator package
 
-This package convert a raw data into descriptive statistics and seperation of means using Tukey HSD for now
+This package convert a raw data into descriptive statistics and separation of means using Tukey HSD for now
+
+### Installation
+
+```{r}
+devtools::install_github("https://github.com/emperorDuke/meanSeparator.git")
+```
+
+### Requirements
+
+-   R 4.1.0 \>
+
+-   tidyverse
+
+-   lodaR :: installation link is below
+
+``` r
+devtools::install_github("https://github.com/emperorDuke/lodaR.git")
+```
 
 ```{r}
 
@@ -21,7 +39,7 @@ obj <- new(
   factor_vars = "letter"
 )
 
-## for displaying a well pacakaged table
+## for displaying a well packaged table
 
 result <- obj$display_table()
 
