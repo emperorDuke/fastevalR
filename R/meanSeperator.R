@@ -127,7 +127,7 @@ Separator <- methods::setRefClass(
         letters <- post_hoc_tbl |>
           split(splitting_vars) |>
           lapply(get_letters) |>
-          reduce(append)
+          purrr::reduce(append)
 
         return(do.call(rbind, lapply(names(letters), function(name) {
           strsplit(name, .self$code_seperator, fixed = T) |>
