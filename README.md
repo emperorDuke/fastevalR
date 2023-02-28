@@ -45,7 +45,7 @@ result <- obj$display_table()
 
 ## for display the a list containing results from the differenct groups
 
-splitted_results <- objseparate()
+splitted_results <- obj$separate()
 ```
 
 ## Parameters the function uses
