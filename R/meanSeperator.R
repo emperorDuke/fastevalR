@@ -8,6 +8,7 @@
 #' @import dplyr
 #' @import stringr
 #' @import lodaR
+#' @importFrom multcompView multcompLetters
 #'
 #' @param data The data frame containing variables to be analyzed
 #' @param indep_var The independent or predictor variable in the data
@@ -23,7 +24,8 @@ Separator <- methods::setRefClass(
     indep_var = "character",
     grouping_vars = "vector",
     code_seperator = 'character',
-    factor_vars = "vector"
+    factor_vars = "vector",
+    .letter.name = "character"
   ),
   methods = list(
     initialize = function(data,
@@ -31,17 +33,18 @@ Separator <- methods::setRefClass(
                           factor_vars = NA,
                           grouping_vars = NA,
                           code_seperator = "@") {
-      data <<- data
+      data <<- as.data.frame(data)
       indep_var <<- indep_var
       grouping_vars <<- grouping_vars
       code_seperator <<- code_seperator
+      .letter.name <<- "letters"
 
       if (all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
         factor_vars <<- c(grouping_vars, indep_var)
       } else if (!all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
         factor_vars <<- unique(c(factor_vars, grouping_vars, indep_var))
       } else {
-        factor_vars <<- unique(c(factor_vars, indep_var))
+        factor_vars <<- c(factor_vars, indep_var)
       }
     },
     .merge_vars = function(.self, data, var) {
@@ -55,7 +58,7 @@ Separator <- methods::setRefClass(
       if (length(vars) > 1) {
         vars <- as.data.frame(vars) |>
           dplyr::rowwise() |>
-          dplyr::transmute(code = paste(dplyr::c_across(), collapse = .self$code_seperator))
+          dplyr::transmute(code = paste(dplyr::c_across(cols = everything()), collapse = .self$code_seperator))
 
         vars <- vars$code
       } else {
@@ -74,50 +77,42 @@ Separator <- methods::setRefClass(
           dplyr::mutate(code = paste(group1, group2, sep = "-")) |>
           dplyr::select(p.adj, code)
       } else {
-        tryCatch(
-          .self$data |>
-            dplyr::group_by(dplyr::across(dplyr::all_of(.self$grouping_vars))) |>
-            tukey.HSD(as.formula(sprintf("%s ~ %s", var, .self$indep_var))) |>
-            dplyr::arrange(dplyr::across(dplyr::all_of(.self$grouping_vars))) |>
-            dplyr::mutate(combo1 = .self$.merge_vars(.data, group1)) |>
-            dplyr::mutate(combo2 = .self$.merge_vars(.data, group2)) |>
-            dplyr::mutate(code = paste(combo1, combo2, sep = "-")) |>
-            dplyr::select(dplyr::all_of(.self$grouping_vars), p.adj, code),
-          error = function(e) {
-            .self$data |>
-              dplyr::group_by(dplyr::across(dplyr::all_of(c(.self$grouping_vars, .self$indep_var)))) |>
-              dplyr::mutate(p.adj = rep(NA, dplyr::n())) |>
-              dplyr::mutate(combo1 = .self$.merge_vars(.data, .data[[.self$indep_var]])) |>
-              dplyr::mutate(combo2 = .self$.merge_vars(.data, .data[[.self$indep_var]])) |>
-              dplyr::mutate(code = paste(combo1, combo2, sep = "-")) |>
-              dplyr::select(dplyr::all_of(c(.self$grouping_vars, .self$indep_var)), code, p.adj)
-          }
-        )
+        .self$data |>
+          dplyr::group_by(dplyr::across(dplyr::all_of(.self$grouping_vars))) |>
+          tukey.HSD(as.formula(sprintf("%s ~ %s", var, .self$indep_var))) |>
+          dplyr::arrange(dplyr::across(dplyr::all_of(.self$grouping_vars))) |>
+          dplyr::mutate(combo1 = .self$.merge_vars(.data, group1)) |>
+          dplyr::mutate(combo2 = .self$.merge_vars(.data, group2)) |>
+          dplyr::mutate(code = paste(combo1, combo2, sep = "-")) |>
+          dplyr::select(dplyr::all_of(.self$grouping_vars), p.adj, code)
       }
     },
     .compute_letters = function(.self, post_hoc_tbl) {
       get_letters = function(df) {
         if (all(is.na(df$p.adj)) || all(is.nan(df$p.adj))) {
-          p_val <- stats::setNames(rep(0, nrow(df)), df$code)
-          .letters <- multcompView::multcompLetters(p_val)$Letters
-          return(sapply(.letters, function(l) NA, simplify = F))
+          codes <- lapply(df$code, function(c) unlist(strsplit(c, "-", fixed = T)))
+          codes <- unique(unlist(codes))
+
+          return(rep(NA, length(codes)) |> stats::setNames(codes))
         } else {
-          df <- suppressWarnings(
-            with(df, df[!is.nan(p.adj) || !is.na(p.adj),])
-          )
+          if (any(is.na(df$p.adj)) || any(is.nan(df$p.adj))) {
+            df <- df[-which(is.na(df$p.adj) || is.nan(df$p.adj)), ]
+          }
+
           p_val <- stats::setNames(df$p.adj, df$code)
           compare <- multcompView::multcompLetters(p_val)
+
           return(compare$Letters)
         }
       }
 
       if (all(is.na(.self$grouping_vars))) {
-        letters <- suppressWarnings(get_letters(post_hoc_tbl))
+        letters <- get_letters(post_hoc_tbl)
 
         return(do.call(rbind, lapply(names(letters), function(name) {
           list(name) |>
             append(letters[[name]]) |>
-            stats::setNames(c(.self$indep_var, "letters")) |>
+            stats::setNames(c(.self$indep_var, .self$.letter.name)) |>
             as.data.frame()
         })) |>
           dplyr::mutate(code = .data[[.self$indep_var]]))
@@ -125,8 +120,12 @@ Separator <- methods::setRefClass(
       } else {
         splitting_vars <- post_hoc_tbl[, .self$grouping_vars]
 
+        if (length(.self$grouping_vars) > 1) {
+          splitting_vars <- as.list(splitting_vars)
+        }
+
         letters <- post_hoc_tbl |>
-          split(as.list(splitting_vars)) |>
+          split(splitting_vars) |>
           lapply(get_letters) |>
           reduce(append)
 
@@ -135,7 +134,7 @@ Separator <- methods::setRefClass(
             unlist() |>
             as.list() |>
             append(letters[[name]]) |>
-            stats::setNames(c(.self$grouping_vars, .self$indep_var, "letters")) |>
+            stats::setNames(c(.self$grouping_vars, .self$indep_var, .self$.letter.name)) |>
             as.data.frame()
         })) |>
           dplyr::mutate(code = .self$.merge_vars(.data, .data[[.self$indep_var]])))
@@ -150,22 +149,22 @@ Separator <- methods::setRefClass(
         return(.self$.merge_vars(data, data[[.self$indep_var]]))
       }
 
-      summary_vars <- c()
-      selection_vars <- .self$factor_vars
+      summary_vars <- .self$factor_vars
+      selection_vars <- c(.self$grouping_vars, .self$indep_var)
 
       if (all(is.na(.self$grouping_vars))) {
         selection_vars <- .self$indep_var
-        summary_vars <- .self$factor_vars
       }
 
       .self$data |>
+        na.omit() |>
         dplyr::group_by(dplyr::across(dplyr::all_of(selection_vars))) |>
         dplyr::summarise(dplyr::across(.cols = -dplyr::any_of(summary_vars), .fns = get_summary), .groups = "drop") |>
         dplyr::select(dplyr::all_of(c(selection_vars, var))) |>
-        na.omit() |>
+        dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(summary_vars), .fns = ~ stringr::str_replace_all(.x, "NA", "0.00"))) |>
         dplyr::mutate(code = get_code(.data)) |>
         dplyr::inner_join(letters_tbl, by = 'code') |>
-        dplyr::select(dplyr::all_of(c(var, "letters")), dplyr::ends_with(".x")) |>
+        dplyr::select(dplyr::all_of(c(var, .self$.letter.name)), dplyr::ends_with(".x")) |>
         dplyr::rename_with(~ ifelse(stringr::str_detect(.x, ".x"), lodaR::extract_chars(stringr::str_extract(.x, "^[a-z\\.]+(?=x)")), .x)) |>
         dplyr::mutate(
           mean = as.numeric(lodaR::extract_chars(.data[[var]], "^[\\d\\.]+(?=\\s)")),
@@ -187,7 +186,6 @@ Separator <- methods::setRefClass(
           .self$.run_post_hoc(var) |>
             .self$.compute_letters() |>
             .self$.attach_descriptive_stats(var)
-
         }, simplify = FALSE)
     },
     #' Display summary statistics with mean of separation
@@ -196,23 +194,40 @@ Separator <- methods::setRefClass(
     #'
     #' @return  a Data frame
     display_table = function(.self) {
-      selection_vars <- .self$factor_vars
+      selection_vars <- c(.self$grouping_vars, .self$indep_var)
 
       if (all(is.na(.self$grouping_vars))) {
         selection_vars <- .self$indep_var
       }
 
-      seperated_means_list <- .self$separate()
+      insert_stats <- function(data, var) {
+        letters <- data[[.self$.letter.name]]
+        var_data <- data[[var]]
 
+        if (any(is.na(letters))) {
+          return(sapply(seq(letters), function(i) {
+            if (!is.na(letters[i])) {
+              return(paste0(var_data[i], letters[i]))
+            }
+
+            return(var_data[i])
+          }))
+        }
+
+        return(paste0(data[[var]], data[[.self$.letter.name]]))
+      }
+
+      seperated_means_list <- .self$separate()
       seperated_means_list |>
         names() |>
         lapply(function(var) {
           seperated_means_list[[var]] |>
-            dplyr::mutate(dplyr::across(dplyr::all_of(var), ~ paste0(.data[[var]], .data[['letters']]))) |>
-            dplyr::select(dplyr::all_of(c(selection_vars, var)))
+            dplyr::mutate(dplyr::across(dplyr::all_of(var), ~ insert_stats(.data, var))) |>
+            dplyr::select(dplyr::any_of(c(selection_vars, var)))
         }) |>
         purrr::reduce(~ merge(.x, .y, by = selection_vars)) |>
-        dplyr::rename_with(~ lodaR::capitalize(.x))
+        dplyr::rename_with(~  lodaR::capitalize(.x))
     }
   )
 )
+
