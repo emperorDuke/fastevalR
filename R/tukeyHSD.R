@@ -1,11 +1,23 @@
 #'it is a pipe friendly version of the base R TukeyHSD function
 #'
+#'@import stats
+#'
 #'@param data A data frame in which the variables specified in the formula will be found. If missing, the variables are searched for in the standard way.
 #'@param formula A formula specifying the model
 #'@returns a dataframe
 #'@export
 tukey.HSD <- function(data, formula) {
   grouping_vars <- dplyr::group_vars(data)
+
+  get_splitted_data <- function(groups_vrs) {
+    if (length(grouping_vars) > 1) {
+      groups_vrs <- apply(groups_vrs, 2, as.character)
+      splitted_data <- data |> split(as.list(groups_vrs))
+    } else {
+      groups_vrs <- sapply(groups_vrs, as.character)
+      splitted_data <- data |> split(groups_vrs)
+    }
+  }
 
   get_post_hoc_groups <- function(formula, data) {
     post_hoc <- stats::TukeyHSD(stats::aov(formula, data))
@@ -29,7 +41,7 @@ tukey.HSD <- function(data, formula) {
 
   if (length(grouping_vars) > 0) {
     groups_vrs <- data[, grouping_vars]
-    splitted_data <- data |> split(as.list(groups_vrs))
+    splitted_data <- get_splitted_data(groups_vrs)
 
     results <- do.call(rbind, splitted_data |>
       names() |>

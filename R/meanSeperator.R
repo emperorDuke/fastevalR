@@ -15,8 +15,7 @@
 #' @param factor_var The factor variables in the data - Optional when `grouping var` argument is specified
 #' @param grouping_var The grouping variables in the data if there are any - Optional
 #' @param code_seperator The internal code separator defaults to `@` - Optional
-#' @exportClass Separator
-#' @export Separator
+#' @export
 Separator <- methods::setRefClass(
   'Separator',
   fields = list(
@@ -67,7 +66,7 @@ Separator <- methods::setRefClass(
         vars <- unlist(vars)
       }
 
-      ## merge functions coded vectors with `mergee` variable
+      ## merge functions coded vectors with `var` variable
       return(paste(vars, var, sep = .self$code_seperator))
     },
     .run_post_hoc = function(.self, var) {
@@ -78,6 +77,7 @@ Separator <- methods::setRefClass(
           dplyr::select(p.adj, code)
       } else {
         .self$data |>
+          dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(c(.self$grouping_vars, .self$indep_var)), ~ ifelse(is.na(.x), 0, .x))) |>
           dplyr::group_by(dplyr::across(dplyr::all_of(.self$grouping_vars))) |>
           tukey.HSD(as.formula(sprintf("%s ~ %s", var, .self$indep_var))) |>
           dplyr::arrange(dplyr::across(dplyr::all_of(.self$grouping_vars))) |>
@@ -96,7 +96,7 @@ Separator <- methods::setRefClass(
           return(rep(NA, length(codes)) |> stats::setNames(codes))
         } else {
           if (any(is.na(df$p.adj)) || any(is.nan(df$p.adj))) {
-            df <- df[-which(is.na(df$p.adj) || is.nan(df$p.adj)), ]
+            df <- df[!df$p.adj %in% c(NA, NaN), ]
           }
 
           p_val <- stats::setNames(df$p.adj, df$code)
@@ -157,18 +157,19 @@ Separator <- methods::setRefClass(
       }
 
       .self$data |>
-        na.omit() |>
         dplyr::group_by(dplyr::across(dplyr::all_of(selection_vars))) |>
         dplyr::summarise(dplyr::across(.cols = -dplyr::any_of(summary_vars), .fns = get_summary), .groups = "drop") |>
         dplyr::select(dplyr::all_of(c(selection_vars, var))) |>
-        dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(summary_vars), .fns = ~ stringr::str_replace_all(.x, "NA", "0.00"))) |>
+        dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(summary_vars), .fns = ~ stringr::str_replace_all(.x, "NA|NaN", "0.00"))) |>
         dplyr::mutate(code = get_code(.data)) |>
         dplyr::inner_join(letters_tbl, by = 'code') |>
         dplyr::select(dplyr::all_of(c(var, .self$.letter.name)), dplyr::ends_with(".x")) |>
         dplyr::rename_with(~ ifelse(stringr::str_detect(.x, ".x"), lodaR::extract_chars(stringr::str_extract(.x, "^[a-z\\.]+(?=x)")), .x)) |>
         dplyr::mutate(
-          mean = as.numeric(lodaR::extract_chars(.data[[var]], "^[\\d\\.]+(?=\\s)")),
-          s.e = as.numeric(lodaR::extract_chars(.data[[var]], "(?<=\\s)[\\d\\.]+")),
+          mean = lodaR::extract_chars(.data[[var]], "^[\\d\\.\\-]+(?=\\s)"),
+          s.e = lodaR::extract_chars(.data[[var]], "(?<=\\s)[\\d\\.\\-]+"),
+          mean = purrr::map_dbl(mean, ~ ifelse(stringr::str_detect(.x, "^[\\d]+"), as.numeric(.x), NA)),
+          s.e = purrr::map_dbl(s.e, ~ ifelse(stringr::str_detect(.x, "^[\\d]+"), as.numeric(.x), NA)),
           y.pt = mean + s.e
         ) |>
         dplyr::relocate(dplyr::any_of(selection_vars), .before = dplyr::all_of(var))
@@ -207,14 +208,14 @@ Separator <- methods::setRefClass(
         if (any(is.na(letters))) {
           return(sapply(seq(letters), function(i) {
             if (!is.na(letters[i])) {
-              return(paste0(var_data[i], letters[i]))
+              return(paste0(var_data[i], "^", letters[i], "^"))
             }
 
             return(var_data[i])
           }))
         }
 
-        return(paste0(data[[var]], data[[.self$.letter.name]]))
+        return(paste0(data[[var]], "^", data[[.self$.letter.name]], "^"))
       }
 
       seperated_means_list <- .self$separate()
@@ -225,8 +226,8 @@ Separator <- methods::setRefClass(
             dplyr::mutate(dplyr::across(dplyr::all_of(var), ~ insert_stats(.data, var))) |>
             dplyr::select(dplyr::any_of(c(selection_vars, var)))
         }) |>
-        purrr::reduce(~ merge(.x, .y, by = selection_vars)) |>
-        dplyr::rename_with(~  lodaR::capitalize(.x))
+        purrr::reduce( ~ merge(.x, .y, by = selection_vars)) |>
+        dplyr::rename_with( ~  lodaR::capitalize(.x))
     }
   )
 )

@@ -68,6 +68,8 @@ test_that("separator works with repetition in factor vars", {
     age = c(rnorm(8, mean = 66.4), rnorm(8, mean = 60.4))
   )
 
+  data$month <- factor(data$month)
+
   obj <- new(
     'Separator',
     data = data,
@@ -75,6 +77,7 @@ test_that("separator works with repetition in factor vars", {
     grouping_vars = "gender",
     factor_vars = c("letter", "gender")
   )
+
   result <- obj$display_table()
 
   expect_equal(length(colnames(result)), 3)

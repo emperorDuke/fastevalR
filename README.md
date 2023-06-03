@@ -5,7 +5,9 @@ This package convert a raw data into descriptive statistics and separation of me
 ### Installation
 
 ```{r}
+
 devtools::install_github("https://github.com/emperorDuke/meanSeparator.git")
+
 ```
 
 ### Requirements
@@ -16,7 +18,8 @@ devtools::install_github("https://github.com/emperorDuke/meanSeparator.git")
 
 -   lodaR :: installation link is below
 
-``` r
+```{r}
+
 devtools::install_github("https://github.com/emperorDuke/lodaR.git")
 ```
 
@@ -50,12 +53,12 @@ splitted_results <- obj$separate()
 
 ## Parameters the function uses
 
--   data - The raw data in form of a dataframe (Required)
+-   `data` - The raw data in form of a dataframe (**Required**)
 
--   indep_var: Independent variable that is used in the anova (Required)
+-   `indep_var`: Independent variable that will be used in the anova (**Required**)
 
--   grouping_vars: The variables that will be used to group the data (Optional)
+-   `grouping_vars`: A character vector containing variables that will be used to group the data (**Optional**)
 
--   factor_vars: A vector containing names of the factor variables in the dataset (Optional)
+-   `factor_vars`: A vector containing names of the factor variables in the data set (**Required**)
 
-## @copyright*:* *emperorDuke*
+@copyright *emperorDuke*
