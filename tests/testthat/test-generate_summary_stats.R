@@ -7,9 +7,10 @@ test_that("generate summary works with grouping variable", {
 
   result <- generate_summary_stats(
     data = data,
-    indep_var = "month",
+    x = "month",
     grouping_vars = "gender",
-    deviation_type = "sd"
+    deviation_type = "sd",
+    console_view = FALSE
   )
 
   expect_equal(length(result), length(unique(data$gender)))

@@ -16,6 +16,8 @@
 
 \item{deviation_type}{The type of degree of spread - `s.e` or `sd` default to `s.e`}
 
+\item{console_view}{print as plain text if set to ``TRUE` or markdown if set to `FALSE`}
+
 \item{code_seperator}{The internal code separator defaults to `@` - Optional}
 }
 \description{

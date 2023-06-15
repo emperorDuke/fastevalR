@@ -6,22 +6,25 @@
 \usage{
 generate_summary_stats(
   data,
-  indep_var,
+  x,
   deviation_type = "s.e",
   grouping_vars = NA,
-  factor_vars = NA
+  factor_vars = NA,
+  console_view = TRUE
 )
 }
 \arguments{
 \item{data}{The data frame containing variables to be analyzed}
 
-\item{indep_var}{The independent or predictor variable in the data}
+\item{x}{The independent or predictor variable in the data}
 
 \item{deviation_type}{The type of degree of spread - `s.e` or `sd` default to `s.e`}
 
 \item{grouping_vars}{The grouping variables in the data if there are any - Optional}
 
 \item{factor_vars}{The factor variables in the data - Optional when `grouping var` argument is specified}
+
+\item{console_view}{print as plain text if set to ``TRUE` or markdown if set to `FALSE`}
 }
 \value{
 a List of summary tables for all groups

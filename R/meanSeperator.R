@@ -16,6 +16,7 @@
 #' @param factor_var The factor variables in the data - Optional when `grouping var` argument is specified
 #' @param grouping_var The grouping variables in the data if there are any - Optional
 #' @param deviation_type The type of degree of spread - `s.e` or `sd` default to `s.e`
+#' @param console_view print as plain text if set to ``TRUE` or markdown if set to `FALSE`
 #' @param code_seperator The internal code separator defaults to `@` - Optional
 #' @export
 Separator <- methods::setRefClass(
@@ -27,6 +28,7 @@ Separator <- methods::setRefClass(
     deviation_type = "character",
     code_seperator = 'character',
     factor_vars = "vector",
+    console_view = "logical",
     .letter.name = "character"
   ),
   methods = list(
@@ -35,12 +37,14 @@ Separator <- methods::setRefClass(
                           factor_vars = NA,
                           grouping_vars = NA,
                           deviation_type = "s.e",
+                          console_view = TRUE,
                           code_seperator = "@") {
       data <<- as.data.frame(data)
       indep_var <<- indep_var
       grouping_vars <<- grouping_vars
       code_seperator <<- code_seperator
       deviation_type <<- deviation_type
+      console_view <<- console_view
       .letter.name <<- "letters"
 
       if (all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
@@ -203,14 +207,16 @@ Separator <- methods::setRefClass(
         if (any(is.na(letters))) {
           return(sapply(seq(letters), function(i) {
             if (!is.na(letters[i])) {
-              return(paste0(var_data[i], "^", letters[i], "^"))
+              return(paste0(var_data[i],
+                            format.label(letters[i], .self$console_view, type = "subscript")))
             }
 
             return(var_data[i])
           }))
         }
 
-        return(paste0(data[[var]], "^", data[[.self$.letter.name]], "^"))
+        return(paste0(data[[var]],
+                      format.label(data[[.self$.letter.name]], .self$console_view, type = "subscript")))
       }
 
       seperated_means_list <- .self$separate()
