@@ -208,7 +208,9 @@ Separator <- methods::setRefClass(
           return(sapply(seq(letters), function(i) {
             if (!is.na(letters[i])) {
               return(paste0(var_data[i],
-                            format.label(letters[i], .self$console_view, type = "subscript")))
+                            ifelse(.self$console_view, " ", ""),
+                            format.label(letters[i],
+                                         .self$console_view, type = "subscript")))
             }
 
             return(var_data[i])
@@ -216,7 +218,9 @@ Separator <- methods::setRefClass(
         }
 
         return(paste0(data[[var]],
-                      format.label(data[[.self$.letter.name]], .self$console_view, type = "subscript")))
+                      ifelse(.self$console_view, " ", ""),
+                      format.label(data[[.self$.letter.name]],
+                                   .self$console_view, type = "subscript")))
       }
 
       seperated_means_list <- .self$separate()
