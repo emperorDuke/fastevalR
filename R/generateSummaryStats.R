@@ -3,36 +3,30 @@
 #' It generate summary statistics and attaches ANOVA p values to the table and also ranks the data set
 #'
 #' @import dplyr
-#' @import tibble
+#' @importFrom tibble as_tibble
 #'
 #' @param data The data frame containing variables to be analyzed
 #' @param indep_var The independent or predictor variable in the data
-#' @param factor_var The factor variables in the data - Optional when `grouping var` argument is specified
-#' @param grouping_var The grouping variables in the data if there are any - Optional
+#' @param deviation_type The type of degree of spread - `s.e` or `sd` default to `s.e`
+#' @param factor_vars The factor variables in the data - Optional when `grouping var` argument is specified
+#' @param grouping_vars The grouping variables in the data if there are any - Optional
 #' @return a List of summary tables for all groups
 #' @export
-generate_summary_stats <- function(data, indep_var, grouping_vars = NA, factor_var = NA) {
-  if (all(is.na(grouping_vars))) {
-    seperator <- Separator$new(data = data,
-                               grouping_vars = grouping_vars,
-                               indep_var = indep_var,
-                               factor_var = factor_var)
-
-    tbls <- seperator$display_table() |>
-      dplyr::rename_with(tolower) |>
-      dplyr::arrange(dplyr::across(dplyr::all_of(indep_var)))
-  }
-
+generate_summary_stats <- function(data,
+                                   indep_var,
+                                   deviation_type = "s.e",
+                                   grouping_vars = NA,
+                                   factor_vars = NA) {
   data <- dplyr::mutate(data,
                         dplyr::across(dplyr::all_of(grouping_vars), as.character))
 
   seperator <- Separator$new(data = data,
                              grouping_vars = grouping_vars,
                              indep_var = indep_var,
-                             factor_var = factor_var)
+                             deviation_type = deviation_type,
+                             factor_vars = factor_vars)
 
   tbls <- seperator$display_table() |>
-    dplyr::rename_with(tolower) |>
     dplyr::arrange(dplyr::across(dplyr::all_of(indep_var)))
 
   splitting.data.var <- data[, grouping_vars]
@@ -48,11 +42,12 @@ generate_summary_stats <- function(data, indep_var, grouping_vars = NA, factor_v
     split(splitting.data.var) |>
     sapply(function(df) {
       dplyr::select(df, -dplyr::any_of(grouping_vars)) |>
-        get_anova(indep_var)
+        anova_test(indep_var)
     }, simplify = FALSE)
 
 
   splitted_tbls <- split(tbls, splitting.tbls.var)
+
 
   splitted_tbls |>
     names() |>
@@ -60,7 +55,7 @@ generate_summary_stats <- function(data, indep_var, grouping_vars = NA, factor_v
       splitted_tbls[[name]] |>
         dplyr::select(-dplyr::any_of(grouping_vars)) |>
         dplyr::bind_rows(
-          tibble::as_tibble(sapply(1:ncol(splitted_anova[[name]]), function(i) "...", simplify = F)),
+          tibble::as_tibble(sapply(colnames(splitted_anova[[name]]), function(i) "...", simplify = F)),
           dplyr::mutate(splitted_anova[[name]], dplyr::across(.cols = dplyr::all_of(indep_var), ~ "**p-value**")
         ))
     }, simplify = FALSE)

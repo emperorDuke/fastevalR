@@ -1,18 +1,19 @@
-test_that("multiplication works", {
+test_that("generate summary works with grouping variable", {
   data <- data.frame(
     month = rep(month.abb[1:4], 4),
     gender = rep(c('M', 'F'), each = 8),
-    age = c(rnorm(8, mean = 66.4), rnorm(8, mean = 60.4))
+    age = c(rnorm(8, mean = 70.4), rnorm(8, mean = 80.4))
   )
 
-  obj <- generate_summary_stats(
+  result <- generate_summary_stats(
     data = data,
     indep_var = "month",
-    factor_vars = "gender"
+    grouping_vars = "gender",
+    deviation_type = "sd"
   )
-  result <- obj$display_table()
 
-  expect_equal(length(colnames(result)), 2)
-  expect_equal(colnames(result), c("Month", "Age"))
-  expect_equal(nrow(result), 4)
+  expect_equal(length(result), length(unique(data$gender)))
+  expect_equal(colnames(result[[1]]), c("month", "age"))
+  expect_equal(nrow(result[[1]]), 4 + 2)
+  expect_equal(result[[1]][[1]][nrow(result[[1]])], "**p-value**")
 })

@@ -14,15 +14,9 @@
 
 \item{grouping_var}{The grouping variables in the data if there are any - Optional}
 
+\item{deviation_type}{The type of degree of spread - `s.e` or `sd` default to `s.e`}
+
 \item{code_seperator}{The internal code separator defaults to `@` - Optional}
-}
-\value{
-a List
-Display summary statistics with mean of separation
-
-display human readable format of the separated mean
-
-a Data frame
 }
 \description{
 Is contains function that separate means and display them in a data frame

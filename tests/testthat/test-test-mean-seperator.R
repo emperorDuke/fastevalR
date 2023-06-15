@@ -14,7 +14,7 @@ test_that("separator works without grouping vars", {
   result <- obj$display_table()
 
   expect_equal(length(colnames(result)), 2)
-  expect_equal(colnames(result), c("Month", "Age"))
+  expect_equal(colnames(result), c("month", "age"))
   expect_equal(nrow(result), 4)
 })
 
@@ -29,12 +29,13 @@ test_that("separator works with grouping vars", {
     'Separator',
     data = data,
     indep_var = "month",
-    grouping_vars = "gender"
+    grouping_vars = "gender",
+    deviation_type = "sd"
   )
   result <- obj$display_table()
 
   expect_equal(length(colnames(result)), 3)
-  expect_equal(colnames(result), c("Gender", "Month", "Age"))
+  expect_equal(colnames(result), c("gender", "month", "age"))
   expect_equal(nrow(result), 8)
 })
 
@@ -56,7 +57,7 @@ test_that("separator works with grouping vars and factor vars", {
   result <- obj$display_table()
 
   expect_equal(length(colnames(result)), 3)
-  expect_equal(colnames(result), c("Gender", "Month", "Age"))
+  expect_equal(colnames(result), c("gender", "month", "age"))
   expect_equal(nrow(result), 8)
 })
 
@@ -81,6 +82,6 @@ test_that("separator works with repetition in factor vars", {
   result <- obj$display_table()
 
   expect_equal(length(colnames(result)), 3)
-  expect_equal(colnames(result), c("Gender", "Month", "Age"))
+  expect_equal(colnames(result), c("gender", "month", "age"))
   expect_equal(nrow(result), 8)
 })

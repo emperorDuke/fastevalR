@@ -1,6 +1,8 @@
 #'it is a pipe friendly version of the base R TukeyHSD function
 #'
-#'@import stats
+#'@importFrom stats aov
+#'@importFrom stats setNames
+#'@importFrom stats TukeyHSD
 #'
 #'@param data A data frame in which the variables specified in the formula will be found. If missing, the variables are searched for in the standard way.
 #'@param formula A formula specifying the model

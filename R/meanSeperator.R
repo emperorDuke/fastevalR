@@ -4,16 +4,18 @@
 #'
 #' @importFrom methods new
 #' @importFrom methods setRefClass
+#' @importFrom stats setNames
 #' @import purrr
-#' @import dplyr
 #' @import stringr
 #' @import lodaR
+#' @import dplyr
 #' @importFrom multcompView multcompLetters
 #'
 #' @param data The data frame containing variables to be analyzed
 #' @param indep_var The independent or predictor variable in the data
 #' @param factor_var The factor variables in the data - Optional when `grouping var` argument is specified
 #' @param grouping_var The grouping variables in the data if there are any - Optional
+#' @param deviation_type The type of degree of spread - `s.e` or `sd` default to `s.e`
 #' @param code_seperator The internal code separator defaults to `@` - Optional
 #' @export
 Separator <- methods::setRefClass(
@@ -22,6 +24,7 @@ Separator <- methods::setRefClass(
     data = "data.frame",
     indep_var = "character",
     grouping_vars = "vector",
+    deviation_type = "character",
     code_seperator = 'character',
     factor_vars = "vector",
     .letter.name = "character"
@@ -31,11 +34,13 @@ Separator <- methods::setRefClass(
                           indep_var,
                           factor_vars = NA,
                           grouping_vars = NA,
+                          deviation_type = "s.e",
                           code_seperator = "@") {
       data <<- as.data.frame(data)
       indep_var <<- indep_var
       grouping_vars <<- grouping_vars
       code_seperator <<- code_seperator
+      deviation_type <<- deviation_type
       .letter.name <<- "letters"
 
       if (all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
@@ -158,7 +163,7 @@ Separator <- methods::setRefClass(
 
       .self$data |>
         dplyr::group_by(dplyr::across(dplyr::all_of(selection_vars))) |>
-        dplyr::summarise(dplyr::across(.cols = -dplyr::any_of(summary_vars), .fns = get_summary), .groups = "drop") |>
+        dplyr::summarise(dplyr::across(.cols = -dplyr::any_of(summary_vars), .fns = ~ get_summary(.x, .self$deviation_type)), .groups = "drop") |>
         dplyr::select(dplyr::all_of(c(selection_vars, var))) |>
         dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(summary_vars), .fns = ~ stringr::str_replace_all(.x, "NA|NaN", "0.00"))) |>
         dplyr::mutate(code = get_code(.data)) |>
@@ -174,11 +179,6 @@ Separator <- methods::setRefClass(
         ) |>
         dplyr::relocate(dplyr::any_of(selection_vars), .before = dplyr::all_of(var))
     },
-    #' Groups results based on grouping vars
-    #'
-    #' groups the analyzed data and separation of mean analysis using the grouping var into a list
-    #'
-    #' @return a List
     separate = function(.self) {
       .self$data |>
         dplyr::select(-dplyr::any_of(.self$factor_vars)) |>
@@ -189,11 +189,6 @@ Separator <- methods::setRefClass(
             .self$.attach_descriptive_stats(var)
         }, simplify = FALSE)
     },
-    #' Display summary statistics with mean of separation
-    #'
-    #' display human readable format of the separated mean
-    #'
-    #' @return  a Data frame
     display_table = function(.self) {
       selection_vars <- c(.self$grouping_vars, .self$indep_var)
 
@@ -226,8 +221,7 @@ Separator <- methods::setRefClass(
             dplyr::mutate(dplyr::across(dplyr::all_of(var), ~ insert_stats(.data, var))) |>
             dplyr::select(dplyr::any_of(c(selection_vars, var)))
         }) |>
-        purrr::reduce( ~ merge(.x, .y, by = selection_vars)) |>
-        dplyr::rename_with( ~  lodaR::capitalize(.x))
+        purrr::reduce( ~ merge(.x, .y, by = selection_vars))
     }
   )
 )

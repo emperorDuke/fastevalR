@@ -4,10 +4,12 @@
 \alias{get_summary}
 \title{Format descriptive stats summary}
 \usage{
-get_summary(x)
+get_summary(x, spread = "s.e")
 }
 \arguments{
 \item{x}{numeric vector to be summarized}
+
+\item{spread}{deviation type}
 }
 \value{
 character vector

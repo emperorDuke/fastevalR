@@ -3,13 +3,16 @@
 #' It carries out one way ANOVA and is pipe friendly
 #'
 #' @import dplyr
-#' @import stats
+#' @importFrom stats aov
+#' @importFrom stats as.formula
+#' @importFrom stats setNames
+#' @importFrom stats anova
 #'
 #' @param data The data frame containing variables to be analyzed
 #' @param indep_var The independent or predictor variable in the data
 #' @return dataframe containing the ANOVA result
 #' @export
-anova.test <- function(data, indep_var) {
+anova_test <- function(data, indep_var) {
   groups <- dplyr::group_vars(data)
 
   get_p_value <- function(data, var) {

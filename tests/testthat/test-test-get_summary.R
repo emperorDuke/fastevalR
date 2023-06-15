@@ -5,7 +5,7 @@ test_that("get summary works", {
     age = c(rnorm(8, mean = 66.4), rnorm(8, mean = 60.4))
   )
 
-  summary <- get_summary(data$age)
+  summary <- get_summary(data$age, spread = "sd")
 
   expect_true(stringr::str_detect(summary, "±"))
   expect_true(stringr::str_detect(summary, "^[\\d\\.]+(?=\\s)"))
