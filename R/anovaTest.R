@@ -9,14 +9,14 @@
 #' @importFrom stats anova
 #'
 #' @param data The data frame containing variables to be analyzed
-#' @param indep_var The independent or predictor variable in the data
+#' @param x The independent or predictor variable in the data
 #' @return dataframe containing the ANOVA result
 #' @export
-fastanova.test <- function(data, indep_var) {
+fastanova.test <- function(data, x) {
   groups <- dplyr::group_vars(data)
 
   get_p_value <- function(data, var) {
-    formula <- stats::as.formula(sprintf("%s ~ %s", var, indep_var))
+    formula <- stats::as.formula(sprintf("%s ~ %s", var, x))
     aov_res <- stats::anova(stats::aov(formula, data = data))
 
     if (is.nan(aov_res$`Pr(>F)`[[1]])) {
@@ -32,7 +32,7 @@ fastanova.test <- function(data, indep_var) {
     return(
       data |>
         as.data.frame() |>
-        dplyr::select(-dplyr::any_of(c(groups, indep_var))) |>
+        dplyr::select(-dplyr::any_of(c(groups, x))) |>
         colnames() |>
         lapply(function(var) {
           do.call(rbind, lapply(names(splitted_data), function(name) {
@@ -40,24 +40,24 @@ fastanova.test <- function(data, indep_var) {
 
             as.list(unlist(strsplit(name, ".", fixed = T))) |>
               append(list("...", p_val)) |>
-              stats::setNames(c(groups, indep_var,  var)) |>
+              stats::setNames(c(groups, x,  var)) |>
               as.data.frame()
           }))
         }) |>
-        Reduce(function(.x, .y) merge(.x, .y, by = c(groups, indep_var)), x = _)
+        Reduce(function(.x, .y) merge(.x, .y, by = c(groups, x)), x = _)
     )
   }
 
   return(
     data |>
       as.data.frame() |>
-      dplyr::select(-dplyr::any_of(indep_var)) |>
+      dplyr::select(-dplyr::any_of(x)) |>
       colnames() |>
       lapply(function(var) {
-        p_val <- get_p_value(data[, c(var, indep_var)], var)
+        p_val <- get_p_value(data[, c(var, x)], var)
 
-        as.data.frame(stats::setNames(list("...", p_val), c(indep_var, var)))
+        as.data.frame(stats::setNames(list("...", p_val), c(x, var)))
       })|>
-      Reduce(function(.x, .y) merge(.x, .y, by = indep_var), x = _)
+      Reduce(function(.x, .y) merge(.x, .y, by = x), x = _)
   )
 }

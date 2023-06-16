@@ -4,6 +4,7 @@
 #'
 #' @import dplyr
 #' @importFrom tibble as_tibble
+#' @import lodaR
 #'
 #' @param data The data frame containing variables to be analyzed
 #' @param x The independent or predictor variable in the data
@@ -19,8 +20,11 @@ fastsummary.stats <- function(data,
                           grouping_vars = NA,
                           factor_vars = NA,
                           console_view = TRUE) {
-  data <- dplyr::mutate(data,
-                        dplyr::across(dplyr::all_of(grouping_vars), as.character))
+  data <- data |>
+    dplyr::mutate(dplyr::across(
+      dplyr::all_of(grouping_vars),
+      ~ lodaR::extract_chars(as.character(.x))
+    ))
 
   seperator <- Separator$new(
     data = data,

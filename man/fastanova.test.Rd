@@ -4,12 +4,12 @@
 \alias{fastanova.test}
 \title{A pipe friendly wrapper for one way ANOVA}
 \usage{
-fastanova.test(data, indep_var)
+fastanova.test(data, x)
 }
 \arguments{
 \item{data}{The data frame containing variables to be analyzed}
 
-\item{indep_var}{The independent or predictor variable in the data}
+\item{x}{The independent or predictor variable in the data}
 }
 \value{
 dataframe containing the ANOVA result
