@@ -5,7 +5,7 @@ This package convert a raw data into descriptive statistics and separation of me
 ### Installation
 
 ```{r}
-devtools::install_github("https://github.com/emperorDuke/meanSeparator.git")
+devtools::install_github("https://github.com/emperorDuke/fastevalR.git")
 ```
 
 ### Requirements
