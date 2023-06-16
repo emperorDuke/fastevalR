@@ -8,7 +8,7 @@
 \arguments{
 \item{data}{The data frame containing variables to be analyzed}
 
-\item{indep_var}{The independent or predictor variable in the data}
+\item{x}{The independent or predictor variable in the data}
 
 \item{factor_var}{The factor variables in the data - Optional when `grouping var` argument is specified}
 

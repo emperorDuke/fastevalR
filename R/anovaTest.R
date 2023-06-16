@@ -12,7 +12,7 @@
 #' @param indep_var The independent or predictor variable in the data
 #' @return dataframe containing the ANOVA result
 #' @export
-anova_test <- function(data, indep_var) {
+fastanova.test <- function(data, indep_var) {
   groups <- dplyr::group_vars(data)
 
   get_p_value <- function(data, var) {

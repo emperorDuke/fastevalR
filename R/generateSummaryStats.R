@@ -13,22 +13,23 @@
 #' @param grouping_vars The grouping variables in the data if there are any - Optional
 #' @return a List of summary tables for all groups
 #' @export
-generate_summary_stats <- function(data,
-                                   x,
-                                   deviation_type = "s.e",
-                                   grouping_vars = NA,
-                                   factor_vars = NA,
-                                   console_view = TRUE) {
-
+fastsummary.stats <- function(data,
+                          x,
+                          deviation_type = "s.e",
+                          grouping_vars = NA,
+                          factor_vars = NA,
+                          console_view = TRUE) {
   data <- dplyr::mutate(data,
                         dplyr::across(dplyr::all_of(grouping_vars), as.character))
 
-  seperator <- Separator$new(data = data,
-                             grouping_vars = grouping_vars,
-                             indep = x,
-                             deviation_type = deviation_type,
-                             console_view = console_view,
-                             factor_vars = factor_vars)
+  seperator <- Separator$new(
+    data = data,
+    x = x,
+    grouping_vars = grouping_vars,
+    deviation_type = deviation_type,
+    console_view = console_view,
+    factor_vars = factor_vars
+  )
 
   tbls <- seperator$display_table() |>
     dplyr::arrange(dplyr::across(dplyr::all_of(x)))
@@ -45,8 +46,8 @@ generate_summary_stats <- function(data,
     dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(c(grouping_vars, x)), ~ ifelse(is.na(.x), 0, .x))) |>
     split(splitting.data.var) |>
     sapply(function(df) {
-      dplyr::select(df, -dplyr::any_of(grouping_vars)) |>
-        anova_test(x)
+      dplyr::select(df,-dplyr::any_of(grouping_vars)) |>
+        fastanova.test(x)
     }, simplify = FALSE)
 
 
@@ -59,8 +60,8 @@ generate_summary_stats <- function(data,
       splitted_tbls[[name]] |>
         dplyr::select(-dplyr::any_of(grouping_vars)) |>
         dplyr::bind_rows(
-          tibble::as_tibble(sapply(colnames(splitted_anova[[name]]), function(i) "...", simplify = F)),
-          dplyr::mutate(splitted_anova[[name]], dplyr::across(.cols = dplyr::all_of(x), ~ format.label("p-value", console_view))
-        ))
+          tibble::as_tibble(sapply(colnames(splitted_anova[[name]]), function(c) "...", simplify = F)),
+          dplyr::mutate(splitted_anova[[name]], dplyr::across(.cols = dplyr::all_of(x), ~ format.label("p-value", console_view)))
+        )
     }, simplify = FALSE)
 }

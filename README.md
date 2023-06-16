@@ -1,13 +1,11 @@
-## The mean separator package
+## The fastevalR package
 
 This package convert a raw data into descriptive statistics and separation of means using Tukey HSD for now
 
 ### Installation
 
 ```{r}
-
 devtools::install_github("https://github.com/emperorDuke/meanSeparator.git")
-
 ```
 
 ### Requirements
@@ -19,13 +17,12 @@ devtools::install_github("https://github.com/emperorDuke/meanSeparator.git")
 -   lodaR :: installation link is below
 
 ```{r}
-
 devtools::install_github("https://github.com/emperorDuke/lodaR.git")
 ```
 
 ```{r}
 
-library(meanSeperator)
+library(fastevalR)
 
 data <- data.frame(
   month = rep(month.abb[1:4], 4),
@@ -37,7 +34,7 @@ data <- data.frame(
 obj <- new(
   'Separator',
   data = data,
-  indep_var = "month",
+  x = "month",
   grouping_vars = "gender",
   factor_vars = "letter"
 )
@@ -46,19 +43,25 @@ obj <- new(
 
 result <- obj$display_table()
 
-## for display the a list containing results from the differenct groups
+## for display the a list containing results from the differenct groups without ANOVA p-value
 
 splitted_results <- obj$separate()
+
+## For generation a summary table with ANOVA p-values 
+## `result` is a list of `grouping_vars` and thier respective dataframe without ANOVA p-value
+
+result <- fastsummary.stats(
+  data = data,
+  x = "month",
+  deviation_type = "s.e",
+  grouping_vars = "gender",
+  factor_vars = "letter",
+  console_view = TRUE
+)
+
+## A list
+
+result
 ```
-
-## Parameters the function uses
-
--   `data` - The raw data in form of a dataframe (**Required**)
-
--   `indep_var`: Independent variable that will be used in the anova (**Required**)
-
--   `grouping_vars`: A character vector containing variables that will be used to group the data (**Optional**)
-
--   `factor_vars`: A vector containing names of the factor variables in the data set (**Required**)
 
 @copyright *emperorDuke*

@@ -8,7 +8,7 @@ test_that("separator works without grouping vars", {
   obj <- new(
     'Separator',
     data = data,
-    indep_var = "month",
+    x = "month",
     factor_vars = "gender"
   )
   result <- obj$display_table()
@@ -28,7 +28,7 @@ test_that("separator works with grouping vars", {
   obj <- new(
     'Separator',
     data = data,
-    indep_var = "month",
+    x = "month",
     grouping_vars = "gender",
     deviation_type = "sd"
   )
@@ -50,7 +50,7 @@ test_that("separator works with grouping vars and factor vars", {
   obj <- new(
     'Separator',
     data = data,
-    indep_var = "month",
+    x = "month",
     grouping_vars = "gender",
     factor_vars = "letter"
   )
@@ -74,7 +74,7 @@ test_that("separator works with repetition in factor vars", {
   obj <- new(
     'Separator',
     data = data,
-    indep_var = "month",
+    x = "month",
     grouping_vars = "gender",
     factor_vars = c("letter", "gender")
   )

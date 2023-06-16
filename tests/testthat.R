@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/reference/test_package.html#special-files
 
 library(testthat)
-library(meanSeperator)
+library(fastevalR)
 
-test_check("meanSeperator")
+test_check("fastevalR")

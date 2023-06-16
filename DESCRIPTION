@@ -1,6 +1,6 @@
-Package: meanSeperator
+Package: fastevalR
 Type: Package
-Title: Bulk Seperation Of Mean
+Title: summary statistics generator with ANOVA and TukeyHSD
 Version: 0.1.3
 Author: Effiom Duke
 Maintainer: Effiom Duke <effiomduke@gmail.com>
