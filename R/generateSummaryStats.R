@@ -9,7 +9,7 @@
 #' @param data The data frame containing variables to be analyzed
 #' @param x The independent or predictor variable in the data
 #' @param deviation_type The type of degree of spread - `s.e` or `sd` default to `s.e`
-#' @param console_view print as plain text if set to ``TRUE` or markdown if set to `FALSE`
+#' @param console_view print as plain text if set to `TRUE` or markdown if set to `FALSE`
 #' @param factor_vars The factor variables in the data - Optional when `grouping var` argument is specified
 #' @param grouping_vars The grouping variables in the data if there are any - Optional
 #' @return a List of summary tables for all groups
@@ -21,10 +21,7 @@ fastsummary.stats <- function(data,
                           factor_vars = NA,
                           console_view = TRUE) {
   data <- data |>
-    dplyr::mutate(dplyr::across(
-      dplyr::all_of(grouping_vars),
-      ~ lodaR::extract_chars(as.character(.x))
-    ))
+    dplyr::mutate(dplyr::across(dplyr::all_of(grouping_vars), as.character))
 
   seperator <- Separator$new(
     data = data,

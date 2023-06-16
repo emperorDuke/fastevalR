@@ -39,7 +39,7 @@ Separator <- methods::setRefClass(
                           deviation_type = "s.e",
                           console_view = TRUE,
                           code_seperator = "@") {
-      data <<- as.data.frame(data)
+      data <<- data
       x <<- x
       grouping_vars <<- grouping_vars
       code_seperator <<- code_seperator
