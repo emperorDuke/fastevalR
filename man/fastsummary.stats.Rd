@@ -24,7 +24,7 @@ fastsummary.stats(
 
 \item{factor_vars}{The factor variables in the data - Optional when `grouping var` argument is specified}
 
-\item{console_view}{print as plain text if set to ``TRUE` or markdown if set to `FALSE`}
+\item{console_view}{print as plain text if set to `TRUE` or markdown if set to `FALSE`}
 }
 \value{
 a List of summary tables for all groups
