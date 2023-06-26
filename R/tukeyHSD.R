@@ -29,7 +29,7 @@ tukey.HSD <- function(data, formula) {
 
     groups <- do.call(rbind, lapply(row.names(post_hoc), function(name) {
       name |>
-        strsplit("-", fixed = T) |>
+        strsplit("-", fixed = TRUE) |>
         unlist() |>
         as.list() |>
         stats::setNames(c("group2", "group1")) |>
@@ -53,7 +53,7 @@ tukey.HSD <- function(data, formula) {
         group_vars <- grouping_vars |>
           seq() |>
           lapply(function(i) {
-            rep(unlist(strsplit(name, ".", fixed = T))[i], nrow(post_hoc_groups))
+            rep(unlist(strsplit(name, ".", fixed = TRUE))[i], nrow(post_hoc_groups))
           }) |>
           stats::setNames(grouping_vars) |>
           as.data.frame()

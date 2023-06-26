@@ -145,7 +145,7 @@ Separator <- methods::setRefClass(
           purrr::reduce(append)
 
         return(do.call(rbind, lapply(names(letters), function(name) {
-          strsplit(name, .self$code_seperator, fixed = T) |>
+          strsplit(name, .self$code_seperator, fixed = TRUE) |>
             unlist() |>
             as.list() |>
             append(letters[[name]]) |>

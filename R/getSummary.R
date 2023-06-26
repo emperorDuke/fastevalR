@@ -8,7 +8,7 @@
 #' @export
 get_summary <- function(x, spread = "s.e") {
   if (!spread %in% c("s.e", "sd")) {
-    stop("spread can either be a `sd` or `s.e")
+    stop("spread must either be `sd` or `s.e`")
   }
 
   x <- x[!is.na(x)]
