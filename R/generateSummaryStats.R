@@ -95,7 +95,7 @@ fastsummary.stats <- function(data,
       sapply(function(df) {
         if (all(is.na(factor_vars))) {
           dplyr::select(df,-dplyr::any_of(grouping_vars)) |>
-            fastanova.test(x)
+            fastanova.test(x, add = add)
         } else {
           dplyr::select(df,-dplyr::any_of(c(grouping_vars, factor_vars))) |>
             fastanova.test(x, add = add)
