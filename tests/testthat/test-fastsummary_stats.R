@@ -10,11 +10,12 @@ data <- data.frame(
 )
 
 
-test_that("fast summary function works with grouping variable", {
+test_that("fast summary function works with grouping variable and only p-value as the statistic result", {
   result <- fastsummary.stats(
     data = data,
     x = "month",
     grouping_vars = c("gender", "location"),
+    add = "p-value",
     deviation_type = "sd",
     console_view = FALSE
   )
@@ -23,6 +24,21 @@ test_that("fast summary function works with grouping variable", {
   expect_equal(colnames(result[[1]]), c("month", "age"))
   expect_equal(nrow(result[[1]]), n_month + 2)
   expect_equal(result[[1]][[1]][nrow(result[[1]])], "**p-value**")
+})
+
+test_that("fast summary function works with grouping variable and has p-value and f-value as the statistic result", {
+  result <- fastsummary.stats(
+    data = data,
+    x = "month",
+    grouping_vars = c("gender", "location"),
+    add = c("f-value", "p-value")
+  )
+
+  expect_equal(length(result), length(unique(data$gender)) * length(unique(data$location)))
+  expect_equal(colnames(result[[1]]), c("month", "age"))
+  expect_equal(nrow(result[[1]]), n_month + 2)
+  expect_equal(result[[1]][[1]][nrow(result[[1]])], "f-value (p-value)")
+  expect_true(stringr::str_detect(result[[1]][[1]][nrow(result[[2]])], "[\\d\\s]+(?=\\()"))
 })
 
 test_that("fast summary function works with one grouping variable and one factor variable", {
