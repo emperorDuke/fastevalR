@@ -40,6 +40,7 @@ test_that("fast summary function works with one grouping variable and one factor
   expect_equal(colnames(result[[1]]), c("month", "age"))
   expect_equal(nrow(result[[1]]), n_month + 2)
   expect_equal(result[[1]][[1]][nrow(result[[1]])], "**f-value (p-value)**")
+  expect_true(stringr::str_detect(result[[1]][[1]][nrow(result[[2]])], "[\\d\\s]+(?=\\()"))
 })
 
 
@@ -56,6 +57,7 @@ test_that("fast summary function works with no grouping variable and more than o
   expect_equal(colnames(result), c("month", "age"))
   expect_equal(nrow(result), n_month + 2)
   expect_equal(result[[1]][nrow(result)], "**f-value (p-value)**")
+  expect_true(stringr::str_detect(result[[2]][nrow(result)], "[\\d\\s]+(?=\\()"))
 })
 
 
