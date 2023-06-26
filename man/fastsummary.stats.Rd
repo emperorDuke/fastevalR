@@ -10,6 +10,7 @@ fastsummary.stats(
   deviation_type = "s.e",
   grouping_vars = NA,
   factor_vars = NA,
+  add = "p-value",
   console_view = TRUE
 )
 }
@@ -20,14 +21,17 @@ fastsummary.stats(
 
 \item{deviation_type}{The type of degree of spread - `s.e` or `sd` default to `s.e`}
 
-\item{grouping_vars}{The grouping variables in the data if there are any - Optional}
+\item{grouping_vars}{a vector of grouping variables in the data - Optional}
 
-\item{factor_vars}{The factor variables in the data - Optional when `grouping var` argument is specified}
+\item{factor_vars}{a vector factor variables in the data - Optional}
+
+\item{add}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value`}
 
 \item{console_view}{print as plain text if set to `TRUE` or markdown if set to `FALSE`}
 }
 \value{
-a List of summary tables for all groups
+a List of summary tables for all groups if there are grouping and a
+dataframe if there are no grouping variables
 }
 \description{
 It generate summary statistics and attaches ANOVA p values to the table and also ranks the data set

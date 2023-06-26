@@ -1,12 +1,12 @@
 Package: fastevalR
 Type: Package
 Title: summary statistics generator with ANOVA and TukeyHSD
-Version: 0.1.4
+Version: 0.1.5
 Author: Effiom Duke
 Maintainer: Effiom Duke <effiomduke@gmail.com>
-Description: It carries out bulk seperation of mean on every varible in the data frame and also carries out descriptive statistics.
+Description: It carries out seperation of mean on every variable in the data frame and also carries out descriptive statistics.
 License: MIT + file LICENSE
-URL: https://github.com/emperorDuke/meanSeparator.git
+URL: https://github.com/emperorDuke/fastevalR.git
 Encoding: UTF-8
 LazyData: true
 Imports:

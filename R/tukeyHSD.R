@@ -13,7 +13,7 @@ tukey.HSD <- function(data, formula) {
 
   get_splitted_data <- function(groups_vrs) {
     if (length(grouping_vars) > 1) {
-      groups_vrs <- apply(groups_vrs, 2, as.character)
+      groups_vrs <- as.data.frame(apply(groups_vrs, 2, as.character))
       splitted_data <- data |> split(as.list(groups_vrs))
     } else {
       groups_vrs <- sapply(groups_vrs, as.character)
@@ -57,7 +57,6 @@ tukey.HSD <- function(data, formula) {
           }) |>
           stats::setNames(grouping_vars) |>
           as.data.frame()
-
 
         do.call(cbind, list(group_vars, post_hoc_groups))
       }))

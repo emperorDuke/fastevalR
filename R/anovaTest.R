@@ -10,19 +10,27 @@
 #'
 #' @param data The data frame containing variables to be analyzed
 #' @param x The independent or predictor variable in the data
+#' @param add a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value`
 #' @return dataframe containing the ANOVA result
 #' @export
-fastanova.test <- function(data, x) {
+fastanova.test <- function(data, x, add = "p-value") {
   groups <- dplyr::group_vars(data)
 
-  get_p_value <- function(data, var) {
+  get_stats <- function(data, var) {
     formula <- stats::as.formula(sprintf("%s ~ %s", var, x))
     aov_res <- stats::anova(stats::aov(formula, data = data))
 
     if (is.nan(aov_res$`Pr(>F)`[[1]])) {
       p_val <- ".."
     } else {
-      p_val <- sprintf("%.2f", aov_res$`Pr(>F)`[[1]])
+      res <- c(sprintf("%.2f", aov_res$`F value`[[1]]), sprintf("%.2f", aov_res$`Pr(>F)`[[1]]))
+      names(res) <- c("f-value", "p-value")
+
+      if (length(add) > 1) {
+        p_val <- paste0(paste(res[add], collapse = " ("), ")")
+      } else {
+        p_val <- res[[add]]
+      }
     }
   }
 
@@ -36,9 +44,9 @@ fastanova.test <- function(data, x) {
         colnames() |>
         lapply(function(var) {
           do.call(rbind, lapply(names(splitted_data), function(name) {
-            p_val <- get_p_value(splitted_data[[name]], var)
+            p_val <- get_stats(splitted_data[[name]], var)
 
-            as.list(unlist(strsplit(name, ".", fixed = T))) |>
+            as.list(unlist(strsplit(name, ".", fixed = TRUE))) |>
               append(list("...", p_val)) |>
               stats::setNames(c(groups, x,  var)) |>
               as.data.frame()
@@ -54,7 +62,7 @@ fastanova.test <- function(data, x) {
       dplyr::select(-dplyr::any_of(x)) |>
       colnames() |>
       lapply(function(var) {
-        p_val <- get_p_value(data[, c(var, x)], var)
+        p_val <- get_stats(data[, c(var, x)], var)
 
         as.data.frame(stats::setNames(list("...", p_val), c(x, var)))
       })|>

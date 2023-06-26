@@ -4,12 +4,14 @@
 \alias{fastanova.test}
 \title{A pipe friendly wrapper for one way ANOVA}
 \usage{
-fastanova.test(data, x)
+fastanova.test(data, x, add = "p-value")
 }
 \arguments{
 \item{data}{The data frame containing variables to be analyzed}
 
 \item{x}{The independent or predictor variable in the data}
+
+\item{add}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value`}
 }
 \value{
 dataframe containing the ANOVA result

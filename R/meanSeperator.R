@@ -16,7 +16,7 @@
 #' @param factor_var The factor variables in the data - Optional when `grouping var` argument is specified
 #' @param grouping_var The grouping variables in the data if there are any - Optional
 #' @param deviation_type The type of degree of spread - `s.e` or `sd` default to `s.e`
-#' @param console_view print as plain text if set to ``TRUE` or markdown if set to `FALSE`
+#' @param console_view print as plain text if set to `TRUE` or markdown if set to `FALSE`
 #' @param code_seperator The internal code separator defaults to `@` - Optional
 #' @export
 Separator <- methods::setRefClass(
@@ -39,7 +39,7 @@ Separator <- methods::setRefClass(
                           deviation_type = "s.e",
                           console_view = TRUE,
                           code_seperator = "@") {
-      data <<- data
+      data <<- as.data.frame(data)
       x <<- x
       grouping_vars <<- grouping_vars
       code_seperator <<- code_seperator
@@ -47,12 +47,18 @@ Separator <- methods::setRefClass(
       console_view <<- console_view
       .letter.name <<- "letters"
 
+      ## there is no factor var and there is grouping vars
       if (all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
         factor_vars <<- c(grouping_vars, x)
+        ## there is factor vars and there is grouping vars
       } else if (!all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
         factor_vars <<- unique(c(factor_vars, grouping_vars, x))
-      } else {
+        ## there is factor vars and there is no grouping vars
+      } else if (!all(is.na(factor_vars)) && all(is.na(grouping_vars))) {
         factor_vars <<- c(factor_vars, x)
+        ## there is no factor vars and there is no grouping vars
+      } else {
+        factor_vars <<- x
       }
     },
     .merge_vars = function(.self, data, var) {
@@ -158,7 +164,6 @@ Separator <- methods::setRefClass(
         return(.self$.merge_vars(data, data[[.self$x]]))
       }
 
-      summary_vars <- .self$factor_vars
       selection_vars <- c(.self$grouping_vars, .self$x)
 
       if (all(is.na(.self$grouping_vars))) {
@@ -167,9 +172,9 @@ Separator <- methods::setRefClass(
 
       .self$data |>
         dplyr::group_by(dplyr::across(dplyr::all_of(selection_vars))) |>
-        dplyr::summarise(dplyr::across(.cols = -dplyr::any_of(summary_vars), ~ get_summary(.x, .self$deviation_type)), .groups = "drop") |>
+        dplyr::summarise(dplyr::across(.cols = -dplyr::any_of(.self$factor_vars), ~ get_summary(.x, .self$deviation_type)), .groups = "drop") |>
         dplyr::select(dplyr::all_of(c(selection_vars, var))) |>
-        dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(summary_vars), ~ stringr::str_replace_all(.x, "NA|NaN", "0.00"))) |>
+        dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(.self$factor_vars), ~ stringr::str_replace_all(.x, "NA|NaN", "0.00"))) |>
         dplyr::mutate(code = get_code(.data)) |>
         dplyr::inner_join(letters_tbl, by = 'code') |>
         dplyr::select(dplyr::all_of(c(var, .self$.letter.name)), dplyr::ends_with(".x")) |>
