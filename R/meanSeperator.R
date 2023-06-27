@@ -5,7 +5,6 @@
 #' @importFrom methods new
 #' @importFrom methods setRefClass
 #' @importFrom stats setNames
-#' @import purrr
 #' @import stringr
 #' @import lodaR
 #' @import dplyr
@@ -142,7 +141,7 @@ Separator <- methods::setRefClass(
         letters <- post_hoc_tbl |>
           split(splitting_vars) |>
           lapply(get_letters) |>
-          purrr::reduce(append)
+          Reduce(append, x = _)
 
         return(do.call(rbind, lapply(names(letters), function(name) {
           strsplit(name, .self$code_seperator, fixed = TRUE) |>
@@ -182,11 +181,12 @@ Separator <- methods::setRefClass(
         dplyr::mutate(
           mean = lodaR::extract_chars(.data[[var]], "^[\\d\\.\\-]+(?=\\s)"),
           s.e = lodaR::extract_chars(.data[[var]], "(?<=\\s)[\\d\\.\\-]+"),
-          mean = purrr::map_dbl(mean, ~ ifelse(stringr::str_detect(.x, "^[\\d]+"), as.numeric(.x), NA)),
-          s.e = purrr::map_dbl(s.e, ~ ifelse(stringr::str_detect(.x, "^[\\d]+"), as.numeric(.x), NA)),
+          mean = sapply(mean, function(.x) ifelse(stringr::str_detect(.x, "^[\\d]+"), as.numeric(.x), NA)),
+          s.e = sapply(s.e, function(.x) ifelse(stringr::str_detect(.x, "^[\\d]+"), as.numeric(.x), NA)),
           y.pt = mean + s.e
         ) |>
-        dplyr::relocate(dplyr::any_of(selection_vars), .before = dplyr::all_of(var))
+        dplyr::relocate(dplyr::any_of(selection_vars), .before = dplyr::all_of(var)) |>
+        dplyr::rename_with(~ ifelse(.x == "s.e", .self$deviation_type, .x))
     },
     separate = function(.self) {
       .self$data |>
@@ -236,7 +236,7 @@ Separator <- methods::setRefClass(
             dplyr::mutate(dplyr::across(dplyr::all_of(var), ~ insert_stats(.data, var))) |>
             dplyr::select(dplyr::any_of(c(selection_vars, var)))
         }) |>
-        purrr::reduce( ~ merge(.x, .y, by = selection_vars))
+        Reduce(function(.x, .y) merge(.x, .y, by = selection_vars), x = _)
     }
   )
 )

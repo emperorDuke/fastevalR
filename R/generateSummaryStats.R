@@ -24,11 +24,22 @@ fastsummary.stats <- function(data,
                           add = "p-value",
                           console_view = TRUE) {
 
-  label = add
+  ## get statistic label
+  get_label <- function() {
+    if (length(add) > 1) {
+      return(paste0(paste(add, collapse = " ("), ")"))
+    }
 
-  if (length(add) > 1) {
-    label <- paste0(paste(add, collapse = " ("), ")")
+    return(add)
   }
+
+  ## insert necessary parameters and call fastanova.test function
+  fastanova.test_wrapper <- function(.data) {
+    params <- list(data = .data, x = x, add = add)
+
+    do.call(fastanova.test, params)
+  }
+
 
   ## there is no grouping vars
   ##
@@ -48,12 +59,12 @@ fastsummary.stats <- function(data,
     if (all(is.na(factor_vars))) {
       anova_res <- data |>
         dplyr::mutate(dplyr::across(-dplyr::any_of(x), ~ ifelse(is.na(.x), 0, .x))) |>
-        fastanova.test(x)
+        fastanova.test_wrapper()
     } else {
       anova_res <- data |>
         dplyr::mutate(dplyr::across(-dplyr::any_of(c(factor_vars, x)), ~ ifelse(is.na(.x), 0, .x))) |>
         dplyr::select(-dplyr::any_of(factor_vars)) |>
-        fastanova.test(x, add = add)
+        fastanova.test_wrapper()
     }
 
     # print(anova_res)
@@ -63,7 +74,7 @@ fastsummary.stats <- function(data,
     tbl |>
       dplyr::bind_rows(
         tibble::as_tibble(sapply(colnames(anova_res), function(c) "...", simplify = F)),
-        dplyr::mutate(anova_res, dplyr::across(.cols = dplyr::all_of(x), ~ format.label(label, console_view)))
+        dplyr::mutate(anova_res, dplyr::across(.cols = dplyr::all_of(x), ~ format.label(get_label(), console_view)))
       )
   } else {
     data <- data |>
@@ -95,10 +106,10 @@ fastsummary.stats <- function(data,
       sapply(function(df) {
         if (all(is.na(factor_vars))) {
           dplyr::select(df,-dplyr::any_of(grouping_vars)) |>
-            fastanova.test(x, add = add)
+            fastanova.test_wrapper()
         } else {
           dplyr::select(df,-dplyr::any_of(c(grouping_vars, factor_vars))) |>
-            fastanova.test(x, add = add)
+            fastanova.test_wrapper()
         }
       }, simplify = FALSE)
 
@@ -123,7 +134,7 @@ fastsummary.stats <- function(data,
           dplyr::select(-dplyr::any_of(grouping_vars)) |>
           dplyr::bind_rows(
             tibble::as_tibble(sapply(colnames(splitted_anova[[name]]), function(c) "...", simplify = F)),
-            dplyr::mutate(splitted_anova[[name]], dplyr::across(.cols = dplyr::all_of(x), ~ format.label(label, console_view)))
+            dplyr::mutate(splitted_anova[[name]], dplyr::across(.cols = dplyr::all_of(x), ~ format.label(get_label(), console_view)))
           )
       }, simplify = FALSE)
   }

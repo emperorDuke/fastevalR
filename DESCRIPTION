@@ -13,7 +13,6 @@ Imports:
   dplyr,
   lodaR,
   methods,
-  purrr,
   stringr,
   tibble,
   multcompView,

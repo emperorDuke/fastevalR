@@ -79,12 +79,10 @@ test_that("fast summary function works with no grouping variable and more than o
 
 test_that("fast summary function works with no grouping variable and no factor variable", {
   result <- data |>
-    dplyr::select(-gender,-location) |>
-    fastsummary.stats(
-      x = "month",
-      deviation_type = "sd",
-      console_view = FALSE
-    )
+    dplyr::select(-gender, -location) |>
+    fastsummary.stats(x = "month",
+                      deviation_type = "sd",
+                      console_view = FALSE)
 
   expect_equal(colnames(result), c("month", "age"))
   expect_equal(nrow(result), n_month + 2)
