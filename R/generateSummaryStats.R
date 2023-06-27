@@ -84,6 +84,8 @@ fastsummary.stats <- function(data,
       )
   } else {
     seperator <- get_separator()
+    data <- dplyr::mutate(data,
+                          dplyr::across(dplyr::all_of(grouping_vars), as.character))
 
     tbls <- seperator$display_table() |>
       dplyr::arrange(dplyr::across(dplyr::all_of(x)))
