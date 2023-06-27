@@ -38,50 +38,20 @@ Separator <- methods::setRefClass(
                           deviation_type = "s.e",
                           console_view = TRUE,
                           code_seperator = "@") {
-      data <<- as.data.frame(data)
+      if (!all(is.na(grouping_vars))) {
+        data <<- dplyr::mutate(data,
+                               dplyr::across(dplyr::all_of(grouping_vars), as.character))
+      } else {
+        data <<- as.data.frame(data)
+      }
+
       x <<- x
       grouping_vars <<- grouping_vars
       code_seperator <<- code_seperator
       deviation_type <<- deviation_type
       console_view <<- console_view
       .letter.name <<- "letters"
-
-      ## there is no factor var and there is grouping vars
-      if (all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
-        factor_vars <<- c(grouping_vars, x)
-        ## there is factor vars and there is grouping vars
-      } else if (!all(is.na(factor_vars)) && !all(is.na(grouping_vars))) {
-        factor_vars <<- unique(c(factor_vars, grouping_vars, x))
-        ## there is factor vars and there is no grouping vars
-      } else if (!all(is.na(factor_vars)) && all(is.na(grouping_vars))) {
-        factor_vars <<- c(factor_vars, x)
-        ## there is no factor vars and there is no grouping vars
-      } else {
-        factor_vars <<- x
-      }
-    },
-    .merge_vars = function(.self, data, var) {
-      vars <- lapply(.self$grouping_vars, function(.x) {
-        as.character(data[[.x]])
-      })
-
-      ## variable vectors to be combined can be more that 1 sometimes
-      ## so if they are more than 1 we need to the combination in a dataframe
-
-      if (length(vars) > 1) {
-        vars <- as.data.frame(vars) |>
-          dplyr::rowwise() |>
-          dplyr::transmute(code = paste(dplyr::c_across(cols = dplyr::everything()), collapse = .self$code_seperator))
-
-        vars <- vars$code
-      } else {
-        ## but if the variable vector is less than 2
-        ## we treat as normal
-        vars <- unlist(vars)
-      }
-
-      ## merge functions coded vectors with `var` variable
-      return(paste(vars, var, sep = .self$code_seperator))
+      factor_vars <<- vec.na.rm(unique(c(factor_vars, grouping_vars, x)))
     },
     .run_post_hoc = function(.self, var) {
       if (all(is.na(.self$grouping_vars))) {
@@ -95,8 +65,8 @@ Separator <- methods::setRefClass(
           dplyr::group_by(dplyr::across(dplyr::all_of(.self$grouping_vars))) |>
           tukey.HSD(as.formula(sprintf("%s ~ %s", var, .self$x))) |>
           dplyr::arrange(dplyr::across(dplyr::all_of(.self$grouping_vars))) |>
-          dplyr::mutate(combo1 = .self$.merge_vars(.data, group1)) |>
-          dplyr::mutate(combo2 = .self$.merge_vars(.data, group2)) |>
+          dplyr::mutate(combo1 = merge_vars(.data, .self$grouping_vars, group1, .self$code_seperator)) |>
+          dplyr::mutate(combo2 = merge_vars(.data, .self$grouping_vars, group2, .self$code_seperator)) |>
           dplyr::mutate(code = paste(combo1, combo2, sep = "-")) |>
           dplyr::select(dplyr::all_of(.self$grouping_vars), p.adj, code)
       }
@@ -104,7 +74,7 @@ Separator <- methods::setRefClass(
     .compute_letters = function(.self, post_hoc_tbl) {
       get_letters = function(df) {
         if (all(is.na(df$p.adj)) || all(is.nan(df$p.adj))) {
-          codes <- lapply(df$code, function(c) unlist(strsplit(c, "-", fixed = T)))
+          codes <- lapply(df$code, function(c) unlist(strsplit(c, "-", fixed = TRUE)))
           codes <- unique(unlist(codes))
 
           return(rep(NA, length(codes)) |> stats::setNames(codes))
@@ -151,7 +121,10 @@ Separator <- methods::setRefClass(
             stats::setNames(c(.self$grouping_vars, .self$x, .self$.letter.name)) |>
             as.data.frame()
         })) |>
-          dplyr::mutate(code = .self$.merge_vars(.data, .data[[.self$x]])))
+          dplyr::mutate(code = merge_vars(.data,
+                                          .self$grouping_vars,
+                                          .data[[.self$x]],
+                                          .self$code_seperator)))
       }
     },
     .attach_descriptive_stats = function(.self, letters_tbl, var) {
@@ -160,14 +133,13 @@ Separator <- methods::setRefClass(
           return(as.character(data[[.self$x]]))
         }
 
-        return(.self$.merge_vars(data, data[[.self$x]]))
+        return(merge_vars(data,
+                          .self$grouping_vars,
+                          data[[.self$x]],
+                          .self$code_seperator))
       }
 
-      selection_vars <- c(.self$grouping_vars, .self$x)
-
-      if (all(is.na(.self$grouping_vars))) {
-        selection_vars <- .self$x
-      }
+      selection_vars <- vec.na.rm(c(.self$grouping_vars, .self$x))
 
       .self$data |>
         dplyr::group_by(dplyr::across(dplyr::all_of(selection_vars))) |>
@@ -199,12 +171,6 @@ Separator <- methods::setRefClass(
         }, simplify = FALSE)
     },
     display_table = function(.self) {
-      selection_vars <- c(.self$grouping_vars, .self$x)
-
-      if (all(is.na(.self$grouping_vars))) {
-        selection_vars <- .self$x
-      }
-
       insert_stats <- function(data, var) {
         letters <- data[[.self$.letter.name]]
         var_data <- data[[var]]
@@ -227,6 +193,8 @@ Separator <- methods::setRefClass(
                       format.label(data[[.self$.letter.name]],
                                    .self$console_view, type = "subscript")))
       }
+
+      selection_vars <- vec.na.rm(c(.self$grouping_vars, .self$x))
 
       seperated_means_list <- .self$separate()
       seperated_means_list |>

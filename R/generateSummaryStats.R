@@ -40,11 +40,10 @@ fastsummary.stats <- function(data,
     do.call(fastanova.test, params)
   }
 
-
-  ## there is no grouping vars
+  ## separator wrapper function
   ##
-  if (all(is.na(grouping_vars))) {
-    seperator <- Separator$new(
+  get_separator <- function() {
+    Separator$new(
       data = data,
       x = x,
       grouping_vars = grouping_vars,
@@ -52,6 +51,13 @@ fastsummary.stats <- function(data,
       console_view = console_view,
       factor_vars = factor_vars
     )
+  }
+
+
+  ## there is no grouping vars
+  ##
+  if (all(is.na(grouping_vars))) {
+    seperator <- get_separator()
 
     tbl <- seperator$display_table() |>
       dplyr::arrange(dplyr::across(dplyr::all_of(x)))
@@ -77,17 +83,7 @@ fastsummary.stats <- function(data,
         dplyr::mutate(anova_res, dplyr::across(.cols = dplyr::all_of(x), ~ format.label(get_label(), console_view)))
       )
   } else {
-    data <- data |>
-      dplyr::mutate(dplyr::across(dplyr::all_of(grouping_vars), as.character))
-
-    seperator <- Separator$new(
-      data = data,
-      x = x,
-      grouping_vars = grouping_vars,
-      deviation_type = deviation_type,
-      console_view = console_view,
-      factor_vars = factor_vars
-    )
+    seperator <- get_separator()
 
     tbls <- seperator$display_table() |>
       dplyr::arrange(dplyr::across(dplyr::all_of(x)))
