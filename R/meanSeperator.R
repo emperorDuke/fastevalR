@@ -289,17 +289,22 @@ Separator <- R6::R6Class(
         selection_vars <- vec.na.rm(c(self$grouping_vars, self$x))
 
         seperated_means_list <- self$separate()
+        aov_tbl <- private$ANOVA_result |>
+          dplyr::mutate(dplyr::across(
+            .cols = dplyr::all_of(self$x),
+            ~ format.label(get_label(), self$format)
+          ))
+
         results <- seperated_means_list |>
           names() |>
           lapply(function(var) {
             seperated_means_list[[var]] |>
               dplyr::mutate(dplyr::across(dplyr::all_of(var), ~ insert_stats(.data, var))) |>
-              dplyr::select(dplyr::any_of(c(selection_vars, var))) |>
-              dplyr::bind_rows(
-                dplyr::mutate(private$ANOVA_result, dplyr::across(.cols = dplyr::all_of(self$x), ~ format.label(get_label(), self$format)))
-              )
+              dplyr::select(dplyr::any_of(c(selection_vars, var)))
+
           }) |>
-          Reduce(function(.x, .y) merge(.x, .y, by = selection_vars), x = _)
+          Reduce(function(.x, .y) merge(.x, .y, by = selection_vars), x = _) |>
+          dplyr::bind_rows(aov_tbl)
 
           private$table_display <<- results
 
