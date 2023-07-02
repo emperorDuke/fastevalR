@@ -34,9 +34,6 @@ test_that("separator works with grouping vars", {
 
   result <- obj$display_table()
 
-  print(obj$separate())
-  print(result)
-
   expect_equal(ncol(result), ncol(data))
   expect_equal(colnames(result), c("gender", "location", "month", "age", "height"))
 })
