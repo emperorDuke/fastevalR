@@ -29,10 +29,13 @@ test_that("separator works with grouping vars", {
     data = data,
     x = "month",
     grouping_vars = c("gender", "location"),
-    deviation_type = "sd"
+    deviation_type = "s.e"
   )
 
   result <- obj$display_table()
+
+  print(obj$separate())
+  print(result)
 
   expect_equal(ncol(result), ncol(data))
   expect_equal(colnames(result), c("gender", "location", "month", "age", "height"))

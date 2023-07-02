@@ -203,7 +203,9 @@ Separator <- R6::R6Class(
           sapply(function(var) {
             private$run_post_hoc(var) |>
               private$compute_letters() |>
-              private$attach_descriptive_stats(var)
+              private$attach_descriptive_stats(var) |>
+              dplyr::mutate(dplyr::across(dplyr::all_of(self$x), ~ factor(.x, levels = unique(self$data[[self$x]])))) |>
+              dplyr::arrange(dplyr::across(dplyr::all_of(self$x)))
           }, simplify = FALSE)
 
         private$results <- result
@@ -304,6 +306,8 @@ Separator <- R6::R6Class(
 
           }) |>
           Reduce(function(.x, .y) merge(.x, .y, by = selection_vars), x = _) |>
+          dplyr::mutate(dplyr::across(dplyr::all_of(self$x), ~ factor(.x, levels = unique(self$data[[self$x]])))) |>
+          dplyr::arrange(dplyr::across(dplyr::all_of(self$x))) |>
           dplyr::bind_rows(aov_tbl)
 
           private$table_display <<- results

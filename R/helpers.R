@@ -6,7 +6,7 @@ format.label <- function(label,
   }
 
   html_list <- c(bold = "<strong>%s</strong>",
-                 subscript = "<sub>%s</sub>")
+                 subscript = "<sup>%s</sup>")
 
   markdown <- c(bold = "**%s**",
                 subscript = "^%s^")
