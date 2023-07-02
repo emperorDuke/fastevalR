@@ -121,16 +121,7 @@ splitted_results <- obj$separate()
 
 ```{r}
 
-result <- fastsummary.stats(
-  data = data,
-  x = "month",
-  deviation_type = "s.e",
-  grouping_vars = "gender",
-  factor_vars = "location",
-  console_view = TRUE
-)
-
-# print(result) a list
+# print(obj$table_summary()) a list
 # 
 # $F
 #     month            age        height

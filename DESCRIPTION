@@ -1,7 +1,7 @@
 Package: fastevalR
 Type: Package
 Title: summary statistics generator with ANOVA and TukeyHSD
-Version: 0.1.5
+Version: 0.1.6
 Author: Effiom Duke
 Maintainer: Effiom Duke <effiomduke@gmail.com>
 Description: It carries out seperation of mean on every variable in the data frame and also carries out descriptive statistics.
@@ -13,8 +13,8 @@ Imports:
   dplyr,
   lodaR,
   methods,
+  R6,
   stringr,
-  tibble,
   multcompView,
   stats
 RoxygenNote: 7.2.3

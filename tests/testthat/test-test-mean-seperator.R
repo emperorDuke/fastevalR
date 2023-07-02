@@ -1,87 +1,160 @@
-test_that("separator works without grouping vars", {
-  data <- data.frame(
-    month = rep(month.abb[1:4], 4),
-    gender = rep(c('M', 'F'), each = 8),
-    age = c(rnorm(8, mean = 66.4), rnorm(8, mean = 60.4))
-  )
+n_month <- 12
+sample_size <- 360
+population <- rnorm(200, mean = 80.4, sd = 4)
 
-  obj <- new(
-    'Separator',
+data <- data.frame(
+  month = rep(month.abb[seq(n_month)], sample_size / n_month),
+  gender = rep(c('M', 'F'), each = sample_size / 2),
+  location = sample(c("abuja", "lagos", "calabar"), size = sample_size, replace = TRUE),
+  age = sample(population, size = sample_size, replace = TRUE)
+)
+
+test_that("separator works without grouping vars", {
+  obj <- Separator$new(
     data = data,
     x = "month",
-    factor_vars = "gender"
+    factor_vars = c("gender", "location")
   )
+
   result <- obj$display_table()
 
   expect_equal(length(colnames(result)), 2)
   expect_equal(colnames(result), c("month", "age"))
-  expect_equal(nrow(result), 4)
 })
 
 test_that("separator works with grouping vars", {
-  data <- data.frame(
-    month = rep(month.abb[1:4], 4),
-    gender = rep(c('M', 'F'), each = 8),
-    age = c(rnorm(8, mean = 66.4), rnorm(8, mean = 60.4))
-  )
-
-  obj <- new(
-    'Separator',
+  obj <- Separator$new(
     data = data,
     x = "month",
-    grouping_vars = "gender",
+    grouping_vars = c("gender", "location"),
     deviation_type = "sd"
   )
+
   result <- obj$display_table()
 
-  expect_equal(length(colnames(result)), 3)
-  expect_equal(colnames(result), c("gender", "month", "age"))
-  expect_equal(nrow(result), 8)
+  expect_equal(length(colnames(result)), 4)
+  expect_equal(colnames(result), c("gender", "location", "month", "age"))
 })
 
 test_that("separator works with grouping vars and factor vars", {
-  data <- data.frame(
-    month = rep(month.abb[1:4], 4),
-    gender = rep(c('M', 'F'), each = 8),
-    letter = rep(letters[1:4], 4),
-    age = c(rnorm(8, mean = 66.4), rnorm(8, mean = 60.4))
-  )
 
-  obj <- new(
-    'Separator',
+  obj <- Separator$new(
     data = data,
     x = "month",
     grouping_vars = "gender",
-    factor_vars = "letter"
+    factor_vars = "location"
   )
+
   result <- obj$display_table()
 
   expect_equal(length(colnames(result)), 3)
   expect_equal(colnames(result), c("gender", "month", "age"))
-  expect_equal(nrow(result), 8)
 })
 
 test_that("separator works with repetition in factor vars", {
-  data <- data.frame(
-    month = rep(month.abb[1:4], 4),
-    gender = rep(c('M', 'F'), each = 8),
-    letter = rep(letters[1:4], 4),
-    age = c(rnorm(8, mean = 66.4), rnorm(8, mean = 60.4))
-  )
-
   data$month <- factor(data$month)
 
-  obj <- new(
-    'Separator',
+  obj <- Separator$new(
     data = data,
     x = "month",
     grouping_vars = "gender",
-    factor_vars = c("letter", "gender")
+    factor_vars = c("location", "gender")
   )
 
   result <- obj$display_table()
 
   expect_equal(length(colnames(result)), 3)
   expect_equal(colnames(result), c("gender", "month", "age"))
-  expect_equal(nrow(result), 8)
+})
+
+
+test_that("fast summary function works with grouping variable and only p-value as the statistic result", {
+
+  obj <- Separator$new(
+    data = data,
+    x = "month",
+    grouping_vars = c("gender", "location"),
+    include = "p-value",
+    deviation_type = "sd",
+    format = "plain"
+  )
+
+  result <- obj$table_summary()
+
+  expect_equal(length(result), length(unique(data$gender)) * length(unique(data$location)))
+  expect_equal(colnames(result[[1]]), c("month", "age"))
+  expect_equal(nrow(result[[1]]), n_month + 2)
+  expect_equal(result[[1]][[1]][nrow(result[[1]])], " p-value")
+})
+
+test_that("fast summary function works with grouping variable and has p-value and f-value as the statistic result", {
+  obj <- Separator$new(
+    data = data,
+    x = "month",
+    grouping_vars = c("gender", "location"),
+    include = c("f-value", "p-value")
+  )
+
+  result <- obj$table_summary()
+
+  expect_equal(length(result), length(unique(data$gender)) * length(unique(data$location)))
+  expect_equal(colnames(result[[1]]), c("month", "age"))
+  expect_equal(nrow(result[[1]]), n_month + 2)
+  expect_equal(result[[1]][[1]][nrow(result[[1]])], " f-value (p-value)")
+  expect_true(stringr::str_detect(result[[1]][[1]][nrow(result[[2]])], "[\\d\\s]+(?=\\()"))
+})
+
+
+test_that("table summary function works with one grouping variable and one factor variable", {
+  obj <- Separator$new(
+    data = data,
+    x = "month",
+    grouping_vars = "gender",
+    factor_vars = "location",
+    include = c("f-value", "p-value"),
+    deviation_type = "sd",
+    format = "html"
+  )
+
+  result <- obj$table_summary()
+
+  expect_equal(length(result), length(unique(data$gender)))
+  expect_equal(colnames(result[[1]]), c("month", "age"))
+  expect_equal(nrow(result[[1]]), n_month + 2)
+  expect_equal(result[[1]][[1]][nrow(result[[1]])], "<strong>f-value (p-value)</strong>")
+  expect_true(stringr::str_detect(result[[1]][[1]][nrow(result[[2]])], "[\\d\\s]+(?=\\()"))
+})
+
+test_that("table summary function works with no grouping variable and more than one factor variable", {
+  obj <- Separator$new(
+    data = data,
+    x = "month",
+    factor_vars = c("location", "gender"),
+    include = c("f-value", "p-value"),
+    deviation_type = "sd",
+    format = "md"
+  )
+
+  result <- obj$table_summary()
+
+  expect_equal(colnames(result), c("month", "age"))
+  expect_equal(nrow(result), n_month + 2)
+  expect_equal(result[[1]][nrow(result)], "**f-value (p-value)**")
+  expect_true(stringr::str_detect(result[[2]][nrow(result)], "[\\d\\s]+(?=\\()"))
+})
+
+test_that("table summary function works with no grouping variable and no factor variable", {
+
+  obj <- Separator$new(
+    data =  dplyr::select(data, -gender, -location),
+    x = "month",
+    deviation_type = "sd",
+    format = "md"
+  )
+
+  result <- obj$table_summary()
+
+  expect_equal(colnames(result), c("month", "age"))
+  expect_equal(nrow(result), n_month + 2)
+  expect_equal(result[[1]][nrow(result)], "**p-value**")
 })

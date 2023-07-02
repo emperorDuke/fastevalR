@@ -1,12 +1,20 @@
-format.label <- function(label, console_view, type = "bold") {
-  if (console_view) {
-    return(label)
+format.label <- function(label,
+                         format = "plain",
+                         type = "bold") {
+  if (format == "plain") {
+    return(paste0(" ", label))
   }
 
-  return(switch(
-    type,
-    bold = sprintf("**%s**", label),
-    subscript = sprintf("^%s^", label)
+  html_list <- c(bold = "<strong>%s</strong>",
+                 subscript = "<sub>%s</sub>")
+
+  markdown <- c(bold = "**%s**",
+                subscript = "^%s^")
+
+  return(switch (
+    format,
+    html = sprintf(html_list[[type]], label),
+    md = sprintf(markdown[[type]], label)
   ))
 }
 
