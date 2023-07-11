@@ -23,6 +23,8 @@ Is contains function that separate means and display them in a data frame
 
 \item{\code{letter.name}}{The column name for the separation of mean letters}
 
+\item{\code{decreasing}}{The order at which the alphabet are ranked - defaults to `FALSE`}
+
 \item{\code{format}}{The representation of the summary data in the dataframe - defaults to `plain` - options are `plain`, `md`, and `html`}
 
 \item{\code{include}}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value`}
@@ -47,11 +49,12 @@ Is contains function that separate means and display them in a data frame
 \if{html}{\out{<div class="r">}}\preformatted{Separator$new(
   data,
   x,
-  factor_vars = NA,
-  grouping_vars = NA,
+  factor_vars = NULL,
+  grouping_vars = NULL,
   deviation_type = "s.e",
   format = "plain",
-  include = "p-value"
+  include = "p-value",
+  decreasing = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -74,6 +77,8 @@ Is contains function that separate means and display them in a data frame
 separates the dataframe
 
 It separates and return a list of the results in there respective groups}
+
+\item{\code{decreasing}}{The order at which the alphabet are ranked - defaults to `FALSE`}
 
 \item{\code{console_view}}{print as plain text if set to `TRUE` or markdown if set to `FALSE`}
 

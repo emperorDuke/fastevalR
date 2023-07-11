@@ -115,6 +115,7 @@ test_that("table summary function works with one grouping variable and one facto
     factor_vars = "location",
     include = c("f-value", "p-value"),
     deviation_type = "sd",
+    decreasing = TRUE,
     format = "html"
   )
 
@@ -134,6 +135,7 @@ test_that("table summary function works with no grouping variable and more than 
     factor_vars = c("location", "gender"),
     include = c("f-value", "p-value"),
     deviation_type = "sd",
+    decreasing = TRUE,
     format = "md"
   )
 
@@ -151,6 +153,7 @@ test_that("table summary function works with no grouping variable and no factor 
     data =  dplyr::select(data, -gender, -location),
     x = "month",
     deviation_type = "sd",
+    decreasing = TRUE,
     format = "md"
   )
 

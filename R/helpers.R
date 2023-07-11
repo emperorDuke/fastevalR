@@ -20,7 +20,7 @@ format.label <- function(label,
 
 
 vec.na.rm <- function(vec) {
-  vec[!is.na(vec)]
+  vec[!is.na(vec) | !is.null(vec)]
 }
 
 
@@ -46,4 +46,15 @@ merge_vars = function(data, grouping_vars, var, separator) {
 
   ## merge functions coded vectors with `var` variable
   return(paste(vars, var, sep = separator))
+}
+
+
+custom_split <- function(data, x) {
+  splitting_vars <- data[, x]
+
+  if (length(x) > 1) {
+    splitting_vars <- as.list(splitting_vars)
+  }
+
+  return(split(data, splitting_vars))
 }
