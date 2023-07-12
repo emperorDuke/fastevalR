@@ -348,6 +348,9 @@ Separator <- R6::R6Class(
         summary <- do.call(rbind, list(tbl[1:nrow(tbl) - 1, ],
                             as.data.frame(sapply(colnames(tbl), function(c) "...", simplify = FALSE)),
                             tbl[nrow(tbl), ]))
+
+        rownames(summary) <- NULL
+
       } else {
         splitted.tbls <- custom_split(tbl, self$grouping_vars)
 
@@ -360,6 +363,8 @@ Separator <- R6::R6Class(
 
           all_sections <- do.call(rbind, sections)
           all_sections <- all_sections[, -which(colnames(all_sections) %in% self$grouping_vars)]
+
+          rownames(all_sections) <- NULL
 
           return(all_sections)
         })
