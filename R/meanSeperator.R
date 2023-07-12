@@ -81,10 +81,10 @@ Separator <- R6::R6Class(
         } else {
           raw_data$code <- private$get_code(raw_data)
 
-          mean_group <- tapply(raw_data[, param], raw_data[, self$x], mean)
+          mean_group <- tapply(raw_data[, param], raw_data$code, mean, na.rm = TRUE)
           ordered_mean <- order(mean_group, decreasing = self$decreasing)
 
-          lvls <- unique(raw_data[, c("code")])[ordered_mean]
+          lvls <- names(mean_group)[ordered_mean]
 
           if (any(is.na(df$p.adj)) || any(is.nan(df$p.adj))) {
             df <- df[!df$p.adj %in% c(NA, NaN), ]
@@ -94,7 +94,6 @@ Separator <- R6::R6Class(
           value <- value[lvls, lvls]
 
           compare <- multcompView::multcompLetters(value)
-
           return(compare$Letters)
         }
       }
@@ -316,7 +315,6 @@ Separator <- R6::R6Class(
 
         aov_tbl <- private$ANOVA_result
         aov_tbl[[self$x]] <- sapply(aov_tbl[[self$x]], function(x) format.label(get_label(), self$format))
-
 
         results <- seperated_means_list |>
           names() |>
