@@ -200,7 +200,6 @@ Separator <- R6::R6Class(
         }
       }
 
-      self$data <- data
       self$x <- x
       self$grouping_vars <- grouping_vars
       self$deviation_type <- deviation_type
