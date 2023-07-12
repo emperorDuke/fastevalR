@@ -191,17 +191,7 @@ Separator <- R6::R6Class(
                           format = "plain",
                           include = "p-value",
                           decreasing = FALSE) {
-
-      if (!is.null(grouping_vars)) {
-        self$data <- data
-
-        for (var in grouping_vars) {
-          self$data[[var]] <- as.character(self$data[[var]])
-        }
-      } else {
-        self$data <- data
-      }
-
+      self$data <- data
       self$x <- x
       self$grouping_vars <- grouping_vars
       self$deviation_type <- deviation_type
