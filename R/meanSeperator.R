@@ -191,6 +191,15 @@ Separator <- R6::R6Class(
                           format = "plain",
                           include = "p-value",
                           decreasing = FALSE) {
+
+      self$data <- data
+
+      if (!is.null(grouping_vars)) {
+        for (var in grouping_vars) {
+          self$data[[var]] <- as.character(self$data[[var]])
+        }
+      }
+
       self$data <- data
       self$x <- x
       self$grouping_vars <- grouping_vars

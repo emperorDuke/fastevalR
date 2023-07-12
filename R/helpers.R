@@ -50,10 +50,6 @@ merge_vars = function(data, grouping_vars, var, separator) {
 
 
 custom_split <- function(data, x) {
-  for (var in x) {
-    data[[var]] <- as.character(data[[var]])
-  }
-
   splitting_vars <- data[, x]
 
   if (length(x) > 1) {
