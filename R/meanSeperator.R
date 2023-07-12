@@ -33,7 +33,7 @@ Separator <- R6::R6Class(
     table_display = NULL,
     ANOVA_result = NULL,
     results = NULL,
-    # get ccdes for the datasets
+    # get codes for the data sets
     #
     # @param data dataframe
     get_code = function(data) {
@@ -194,8 +194,11 @@ Separator <- R6::R6Class(
                           decreasing = FALSE) {
 
       if (!is.null(grouping_vars)) {
-        self$data <- dplyr::mutate(data,
-                                   dplyr::across(dplyr::all_of(grouping_vars), as.character))
+        self$data <- data
+
+        for (var in grouping_vars) {
+          self$data[[var]] <- as.character(self$data[[var]])
+        }
       } else {
         self$data <- data
       }
