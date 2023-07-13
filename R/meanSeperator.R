@@ -193,13 +193,6 @@ Separator <- R6::R6Class(
                           decreasing = FALSE) {
 
       self$data <- data
-
-      if (!is.null(grouping_vars)) {
-        for (var in grouping_vars) {
-          self$data[[var]] <- as.character(self$data[[var]])
-        }
-      }
-
       self$x <- x
       self$grouping_vars <- grouping_vars
       self$deviation_type <- deviation_type
@@ -208,6 +201,15 @@ Separator <- R6::R6Class(
       self$decreasing <- decreasing
       self$factor_vars <- vec.na.rm(unique(c(factor_vars,
                                              grouping_vars)))
+
+      ## converting group columns from factors to character makes it easier to split the data sets
+      ## as compared to when the columns are factors
+      if (!is.null(grouping_vars)) {
+        for (var in grouping_vars) {
+          self$data[[var]] <- as.character(self$data[[var]])
+        }
+      }
+
     },
     #' separates the dataframe
     #'
@@ -252,6 +254,9 @@ Separator <- R6::R6Class(
         if (is.null(self$grouping_vars)) {
           result <- self$data |>
             remove_factor_vars() |>
+            ## change all na's to 0 because some section of the data may have na's all through
+            ## which is bad for the `aov` function
+            dplyr::mutate(dplyr::across(-dplyr::any_of(self$x), ~ ifelse(is.na(.x), 0, .x))) |>
             fastanova.test(x = self$x, add = self$include)
 
         } else {
@@ -259,6 +264,9 @@ Separator <- R6::R6Class(
 
           result <- self$data |>
             dplyr::select(-dplyr::any_of(user_factors)) |>
+            ## change all na's to 0 because some section of the data may have na's all through
+            ## which is bad for the `aov` function
+            dplyr::mutate(dplyr::across(-dplyr::any_of(c(self$grouping_vars, self$x)), ~ ifelse(is.na(.x), 0, .x))) |>
             dplyr::group_by(dplyr::across(dplyr::all_of(self$grouping_vars))) |>
             fastanova.test(x = self$x, add = self$include)
         }
@@ -274,7 +282,6 @@ Separator <- R6::R6Class(
     #' It display human readable dataframe
     #' @return dataframe
     display_table = function() {
-
       get_label <- function() {
         if (length(self$include) > 1) {
           return(paste0(paste(self$include, collapse = " ("), ")"))
@@ -282,8 +289,6 @@ Separator <- R6::R6Class(
 
         return(self$include)
       }
-
-
       insert_stats <- function(data, var) {
         letters <- data[[self$letter.name]]
         var_data <- data[[var]]
@@ -306,12 +311,13 @@ Separator <- R6::R6Class(
       }
 
       if (is.null(private$table_display)) {
-
         selection_vars <- vec.na.rm(c(self$grouping_vars, self$x))
 
         seperated_means_list <- self$separate()
 
         aov_tbl <- private$ANOVA_result
+
+        ## insert labels like p-value in the data
         aov_tbl[[self$x]] <- sapply(aov_tbl[[self$x]], function(x) format.label(get_label(), self$format))
 
         results <- seperated_means_list |>

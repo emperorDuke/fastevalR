@@ -18,7 +18,10 @@ format.label <- function(label,
   ))
 }
 
-
+#' Helper function to help remove na's and null in a vector
+#'
+#' @param vec vector to be cleaned
+#' @return vector
 vec.na.rm <- function(vec) {
   vec[!is.na(vec) | !is.null(vec)]
 }
@@ -48,7 +51,11 @@ merge_vars = function(data, grouping_vars, var, separator) {
   return(paste(vars, var, sep = separator))
 }
 
-
+#' A split function adapted for multiple split groups
+#'
+#' @param data data to be splited
+#' @param x vector or list of data that will be used to split the data
+#' @return list of splited data
 custom_split <- function(data, x) {
   splitting_vars <- data[, x]
 
