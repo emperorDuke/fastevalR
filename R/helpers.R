@@ -11,7 +11,7 @@ format.label <- function(label,
   markdown <- c(bold = "**%s**",
                 subscript = "^%s^")
 
-  return(switch (
+  return(switch(
     format,
     html = sprintf(html_list[[type]], label),
     md = sprintf(markdown[[type]], label)
@@ -22,12 +22,12 @@ format.label <- function(label,
 #'
 #' @param vec vector to be cleaned
 #' @return vector
-vec.na.rm <- function(vec) {
+vec_na_rm <- function(vec) {
   vec[!is.na(vec) | !is.null(vec)]
 }
 
 
-merge_vars = function(data, grouping_vars, var, separator) {
+merge_vars <- function(data, grouping_vars, var, separator) {
   vars <- lapply(grouping_vars, function(.x) {
     as.character(data[[.x]])
   })
@@ -38,7 +38,11 @@ merge_vars = function(data, grouping_vars, var, separator) {
   if (length(vars) > 1) {
     vars <- as.data.frame(vars) |>
       dplyr::rowwise() |>
-      dplyr::transmute(code = paste(dplyr::c_across(cols = dplyr::everything()), collapse = separator))
+      dplyr::transmute(code = paste(
+        dplyr::c_across(cols = dplyr::everything()),
+        collapse = separator
+        )
+      )
 
     vars <- vars$code
   } else {
@@ -64,4 +68,29 @@ custom_split <- function(data, x) {
   }
 
   return(split(data, splitting_vars))
+}
+
+#'Convert repetitions into elipsis
+#'
+#' @param df_ dataframe
+#' @param vars columns in the dataframe to focus on
+#' @return dataframe
+remove_repititions <- function(df_, vars) {
+    df <- df_
+
+    for (var in vars) {
+        current_obs <- ""
+
+        for (i in seq_along(df[[var]])) {
+            t <- df[[var]][i]
+
+            if (t != current_obs) {
+                current_obs <- t
+            } else {
+                df[[var]][i] <- "..."
+            }
+        }
+    }
+
+    return(df)
 }

@@ -5,8 +5,8 @@ height_population <- rnorm(200, mean = 55.4, sd = 10)
 
 data <- data.frame(
   month = rep(month.abb[seq(n_month)], sample_size / n_month),
-  gender = rep(c('M', 'F'), each = sample_size / 2),
-  location = sample(c("abuja", "lagos", "calabar"), size = sample_size, replace = TRUE),
+  gender = rep(c("M", "F"), each = sample_size / 2),
+  location = sample(c("abuja", "lagos", "calabar"), size = sample_size, replace = TRUE), # nolint
   age = sample(population, size = sample_size, replace = TRUE),
   height = sample(height_population, size = sample_size, replace = TRUE)
 )

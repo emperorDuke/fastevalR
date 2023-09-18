@@ -4,21 +4,25 @@
 #'@importFrom stats setNames
 #'@importFrom stats TukeyHSD
 #'
-#'@param data A data frame in which the variables specified in the formula will be found. If missing, the variables are searched for in the standard way.
+#'@param data A data frame in which the variables specified in the formula
+#' will be found. If missing, the variables are searched for
+#' in the standard way.
 #'@param formula A formula specifying the model
 #'@returns a dataframe
 #'@export
-tukey.HSD <- function(data, formula) {
+tukey_hsd <- function(data, formula) {
   grouping_vars <- dplyr::group_vars(data)
 
   get_splitted_data <- function(groups_vrs) {
     if (length(grouping_vars) > 1) {
       groups_vrs <- as.data.frame(apply(groups_vrs, 2, as.character))
-      splitted_data <- data |> split(as.list(groups_vrs))
+      splitted_data <- split(data, as.list(groups_vrs))
     } else {
       groups_vrs <- sapply(groups_vrs, as.character)
-      splitted_data <- data |> split(groups_vrs)
+      splitted_data <- split(data, groups_vrs)
     }
+
+    return(splitted_data)
   }
 
   get_post_hoc_groups <- function(formula, data) {
@@ -53,7 +57,10 @@ tukey.HSD <- function(data, formula) {
         group_vars <- grouping_vars |>
           seq() |>
           lapply(function(i) {
-            rep(unlist(strsplit(name, ".", fixed = TRUE))[i], nrow(post_hoc_groups))
+            rep(
+              unlist(strsplit(name, ".", fixed = TRUE))[i],
+              nrow(post_hoc_groups)
+            )
           }) |>
           stats::setNames(grouping_vars) |>
           as.data.frame()
@@ -64,7 +71,10 @@ tukey.HSD <- function(data, formula) {
     results <- get_post_hoc_groups(formula, data)
   }
 
-  colnames(results) <- lodaR::strip_white_spaces(colnames(results), replace_with = ".")
+  colnames(results) <- lodaR::strip_white_spaces(
+    colnames(results),
+    replace_with = "."
+  )
 
   return(results)
 }
