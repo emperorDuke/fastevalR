@@ -72,8 +72,6 @@ binder_2 <- function(post_hoc_tbl, aov_tbl) {
     aov_tbl <- cbind(aov_tbl[, c(factor_vars)], aov_tbl[, non_factor_vars])
     aov_tbl[[1]] <- terms
 
-    print(aov_tbl)
-
     spacer <- sapply(post_hoc_tbl_vars, function(r) "...", simplify = FALSE)
 
     final_res <- do.call(
