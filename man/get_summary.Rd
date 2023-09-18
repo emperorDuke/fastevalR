@@ -15,5 +15,6 @@ get_summary(x, spread = "s.e")
 character vector
 }
 \description{
-It finds the mean and standard error of a numeric vector and formats then using  +/-.
+It finds the mean and standard error of a numeric vector
+and formats then using  +/-.
 }

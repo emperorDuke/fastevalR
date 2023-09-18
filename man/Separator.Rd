@@ -13,21 +13,21 @@ Is contains function that separate means and display them in a data frame
 
 \item{\code{x}}{The independent or predictor variable in the data}
 
-\item{\code{factor_vars}}{The factor variables in the data - Optional when `grouping var` argument is specified}
+\item{\code{factor_vars}}{The factor variables in the data - Optional when `grouping var` argument is specified # nolint}
 
-\item{\code{grouping_vars}}{The grouping variables in the data if there are any - Optional}
+\item{\code{grouping_vars}}{The grouping variables in the data if there are any - Optional # nolint}
 
-\item{\code{deviation_type}}{The type of degree of spread - `s.e` or `sd` default to `s.e`}
+\item{\code{deviation_type}}{The type of degree of spread - `s.e` or `sd` default to `s.e` # nolint}
 
 \item{\code{code_seperator}}{The internal code separator defaults to `@` - Optional}
 
 \item{\code{letter.name}}{The column name for the separation of mean letters}
 
-\item{\code{decreasing}}{The order at which the alphabet are ranked - defaults to `FALSE`}
+\item{\code{decreasing}}{The order at which the alphabet are ranked - defaults to `FALSE` # nolint}
 
-\item{\code{format}}{The representation of the summary data in the dataframe - defaults to `plain` - options are `plain`, `md`, and `html`}
+\item{\code{format}}{The representation of the summary data in the dataframe - defaults to `plain` - options are `plain`, `md`, and `html` # nolint}
 
-\item{\code{include}}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value`}
+\item{\code{include}}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value` # nolint}
 }
 \if{html}{\out{</div>}}
 }
@@ -39,6 +39,7 @@ Is contains function that separate means and display them in a data frame
 \item \href{#method-Separator-compute_ANOVA}{\code{Separator$compute_ANOVA()}}
 \item \href{#method-Separator-display_table}{\code{Separator$display_table()}}
 \item \href{#method-Separator-table_summary}{\code{Separator$table_summary()}}
+\item \href{#method-Separator-clone}{\code{Separator$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -65,24 +66,24 @@ Is contains function that separate means and display them in a data frame
 
 \item{\code{x}}{The independent or predictor variable in the data}
 
-\item{\code{factor_vars}}{The factor variables in the data - Optional when `grouping var` argument is specified}
+\item{\code{factor_vars}}{The factor variables in the data - Optional when `grouping var` argument is specified # nolint}
 
-\item{\code{grouping_vars}}{The grouping variables in the data if there are any - Optional}
+\item{\code{grouping_vars}}{The grouping variables in the data if there are any - Optional # nolint}
 
-\item{\code{deviation_type}}{The type of degree of spread - `s.e` or `sd` default to `s.e`}
+\item{\code{deviation_type}}{The type of degree of spread - `s.e` or `sd` default to `s.e` # nolint}
 
-\item{\code{format}}{The representation of the summary data in the dataframe - defaults to `plain` - options are `plain`,}
+\item{\code{format}}{The representation of the summary data in the dataframe - defaults to `plain` - options are `plain`, # nolint}
 
-\item{\code{include}}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value`
+\item{\code{include}}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value` # nolint
 separates the dataframe
 
 It separates and return a list of the results in there respective groups}
 
-\item{\code{decreasing}}{The order at which the alphabet are ranked - defaults to `FALSE`}
+\item{\code{decreasing}}{The order at which the alphabet are ranked - defaults to `FALSE` # nolint}
 
-\item{\code{console_view}}{print as plain text if set to `TRUE` or markdown if set to `FALSE`}
+\item{\code{console_view}}{print as plain text if set to `TRUE` or markdown if set to `FALSE` # nolint}
 
-\item{\code{code_seperator}}{The internal code separator defaults to `@` - Optional}
+\item{\code{code_seperator}}{The internal code separator defaults to `@` - Optional # nolint}
 }
 \if{html}{\out{</div>}}
 }
@@ -99,7 +100,8 @@ It separates and return a list of the results in there respective groups}
 list containing the groups of data set result
 Compute the ANOVA for the data
 
-it compute the anova and returns a dataframe containing groups and p-value's
+it compute the anova and returns a dataframe containing
+groups and p-value's
 }
 }
 \if{html}{\out{<hr>}}
@@ -122,9 +124,20 @@ It display human readable dataframe
 \if{latex}{\out{\hypertarget{method-Separator-display_table}{}}}
 \subsection{Method \code{display_table()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Separator$display_table()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Separator$display_table(include_aov = TRUE, order_by = "x", rep_rm = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{include_aov}}{Logical arguments for add results of aov to the separated mean # nolint}
+
+\item{\code{order_by}}{Option to either order the results using independent variable (x) or the grouping vars # nolint}
+
+\item{\code{rep_rm}}{logical argument indicating to remove repitions from grouping variables # nolint}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 dataframe
 Create a table summary for all the groups
@@ -142,6 +155,23 @@ It create a summary of all the possible groups if there are any
 
 \subsection{Returns}{
 list | dataframe
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Separator-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-Separator-clone}{}}}
+\subsection{Method \code{clone()}}{
+The objects of this class are cloneable with this method.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Separator$clone(deep = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{deep}}{Whether to make a deep clone.}
+}
+\if{html}{\out{</div>}}
 }
 }
 }

@@ -296,6 +296,10 @@ Separator <- R6::R6Class(
     #' displays a human readable table
     #'
     #' It display human readable dataframe
+    #' @param include_aov Logical arguments for add results of aov to the separated mean # nolint
+    #' @param order_by  Option to either order the results using independent variable (x) or the grouping vars # nolint
+    #' @param rep_rm logical argument indicating to remove repitions from grouping variables # nolint
+    #' 
     #' @return dataframe
     display_table = function(
       include_aov = TRUE,
