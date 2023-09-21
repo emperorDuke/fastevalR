@@ -89,7 +89,10 @@ fastanova_test_2 <- function(
         )
 
         if ("stratum" %in% colnames(res)) {
-            res <- get_terms(res[res$stratum == "Within", ])
+            index <- join_str(":", c(wid, within))
+            index <- res$stratum == "Within" | res$stratum == index
+
+            res <- get_terms(res[index, ])
         } else {
             res <- get_terms(res)
         }
