@@ -4,6 +4,7 @@
 #' @importFrom stats aov
 #' @importFrom stats as.formula
 #' @importFrom broom tidy
+#' @importFrom lodaR capitalize
 #'
 #' @param data dataframe containing data to analyzed
 #' @param wid the subject identifiers in the datasets
@@ -58,7 +59,10 @@ fastanova_test_2 <- function(
     factor_vars <- unique(c(wid, char_vars[!is.na(char_vars)]))
     vars <- colnames(data[, -which(colnames(data) %in% factor_vars)])
     btw_vars  <- join_str(btw_terms_sep, between)
+    args_vars <- vec_na_rm(unique(c(within, between)))
+
     stratum <- NULL
+
 
     if (!is.null(within)) {
         withn_vars <- join_str(within_terms_sep, within)
@@ -89,34 +93,37 @@ fastanova_test_2 <- function(
         )
 
         if ("stratum" %in% colnames(res)) {
-            index <- join_str(":", c(wid, within))
-            index <- res$stratum == "Within" | res$stratum == index
+            index <- join_str(":", vec_na_rm(c(wid, within)))
 
-            res <- get_terms(res[index, ])
+            if (any(res$stratum == "Within")) {
+                res <- get_terms(res[res$stratum == "Within", ])
+            } else {
+                res <- get_terms(res[res$stratum == index, ])
+            }
         } else {
             res <- get_terms(res)
         }
 
         mat_data_arg <- c(
-            unlist(lapply(between, function(b) rep(b, length(res$p.value)))),
+            unlist(lapply(args_vars, function(b) rep(b, length(res$p.value)))),
             sapply(res$p.value, function(p) sprintf("%.2f", p))
         )
 
         mat <- matrix(
             data = mat_data_arg,
-            ncol = length(between) + 1,
+            ncol = length(args_vars) + 1,
             nrow = length(res$p.value)
         )
 
-        dimnames(mat) <- list(res$term, c(between, var))
+        dimnames(mat) <- list(res$term, c(args_vars, var))
 
-        mat[, seq_along(between)] <- "..."
-        mat[, 1] <- paste0(res$term, " **(p value)**")
+        mat[, seq_along(args_vars)] <- "..."
+        mat[, 1] <- paste0(lodaR::capitalize(res$term), " **(p value)**")
 
         return(mat)
     })
 
-    mat_res <- Reduce(function(a, b) merge(a, b, by = between), x = stats_res)
+    mat_res <- Reduce(function(a, b) merge(a, b, by = args_vars), x = stats_res)
 
     return(mat_res)
 }

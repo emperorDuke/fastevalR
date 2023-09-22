@@ -17,38 +17,38 @@ data <- data |>
     do.call(rbind, args = _) |>
     within({ month <- factor(month) })
 
-# res <- fastanova_test_2(
-#     data = data,
-#     between = c("month", "location"),
-#     within = "month",
-#     wid = "subject",
-#     btw_terms_sep = "*"
-#   )
+res <- fastanova_test_2(
+    data = data,
+    between = c("gender", "location"),
+    within = "month",
+    wid = "subject",
+    btw_terms_sep = "*"
+  )
 
-# obj <- Separator$new(
-#     data = data,
-#     x = "location",
-#     grouping_vars = "month",
-#     factor_vars = c("subject", "gender")
-#   )
+obj <- Separator$new(
+    data = data,
+    x = "location",
+    grouping_vars = c("month", "gender"),
+    factor_vars = c("subject")
+  )
 
-# result <- obj$display_table(
-#   include_aov = FALSE,
-#   order_by = "group",
-#   rep_rm = FALSE
-# )
+result <- obj$display_table(
+  include_aov = FALSE,
+  order_by = "group",
+  rep_rm = TRUE
+)
 
-# binder_2(result, res)
+binder_2(result, res)
 
-# test_that("separator works without grouping vars", {
-#   result <- fastanova_test_2(
-#     data = data,
-#     between = c("gender", "location"),
-#     within = "month",
-#     wid = "subject",
-#     btw_terms_sep = "*"
-#   )
+test_that("separator works without grouping vars", {
+  result <- fastanova_test_2(
+    data = data,
+    between = c("gender", "location"),
+    within = "month",
+    wid = "subject",
+    btw_terms_sep = "*"
+  )
 
-#   expect_equal(ncol(result), ncol(data) - 2)
-#   expect_equal(colnames(result), c("month", "age", "height"))
-# })
+  expect_equal(ncol(result), ncol(data) - 2)
+  expect_equal(colnames(result), c("month", "age", "height"))
+})
