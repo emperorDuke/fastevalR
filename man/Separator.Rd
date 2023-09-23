@@ -28,6 +28,8 @@ Is contains function that separate means and display them in a data frame
 \item{\code{format}}{The representation of the summary data in the dataframe - defaults to `plain` - options are `plain`, `md`, and `html` # nolint}
 
 \item{\code{include}}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value` # nolint}
+
+\item{\code{transform_func}}{a callback that can be to transorm each dependent var in the dataset # nolint}
 }
 \if{html}{\out{</div>}}
 }
@@ -55,7 +57,8 @@ Is contains function that separate means and display them in a data frame
   deviation_type = "s.e",
   format = "plain",
   include = "p-value",
-  decreasing = FALSE
+  decreasing = FALSE,
+  transform_func = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -74,12 +77,14 @@ Is contains function that separate means and display them in a data frame
 
 \item{\code{format}}{The representation of the summary data in the dataframe - defaults to `plain` - options are `plain`, # nolint}
 
-\item{\code{include}}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value` # nolint
+\item{\code{include}}{a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value` # nolint}
+
+\item{\code{decreasing}}{The order at which the alphabet are ranked - defaults to `FALSE` # nolint}
+
+\item{\code{transform_func}}{a callback that can be to transorm each dependent var in the dataset # nolint
 separates the dataframe
 
 It separates and return a list of the results in there respective groups}
-
-\item{\code{decreasing}}{The order at which the alphabet are ranked - defaults to `FALSE` # nolint}
 
 \item{\code{console_view}}{print as plain text if set to `TRUE` or markdown if set to `FALSE` # nolint}
 
