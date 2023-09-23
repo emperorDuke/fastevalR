@@ -1,4 +1,4 @@
-format.label <- function(label,
+format_label <- function(label,
                          format = "plain",
                          type = "bold") {
   if (format == "plain") {

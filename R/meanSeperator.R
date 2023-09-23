@@ -21,6 +21,7 @@
 #' @field decreasing The order at which the alphabet are ranked - defaults to `FALSE` # nolint
 #' @field format The representation of the summary data in the dataframe - defaults to `plain` - options are `plain`, `md`, and `html` # nolint
 #' @field include a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value` # nolint
+#' @field transform_func a callback that can be to transorm each dependent var in the dataset # nolint
 #' @export
 # @field ANOVA_result cache the result of the `compute_ANOVA` function
 # @field results The analysed results for all the groups
@@ -31,6 +32,21 @@ Separator <- R6::R6Class(
     table_display = NULL,
     ANOVA_result = NULL,
     results = NULL,
+    functions_args = list(),
+    # transforms the data for every var
+    #
+    # @param var varible pf interest
+    transform_var = function(var) {
+      if (!is.null(self$transform_func)) {
+        transform_data <- self$transform_func(
+          self$data[, c(self$factor_vars, self$x, var)]
+        )
+
+        return(transform_data)
+      } else {
+        return(self$data)
+      }
+    },
     # get codes for the data sets
     #
     # @param data dataframe
@@ -49,14 +65,14 @@ Separator <- R6::R6Class(
     # Run post-hoc for a parameter in the data set
     #
     # @param param column in dataframe
-    run_post_hoc = function(param) {
+    run_post_hoc = function(transformed_data, param) {
       if (is.null(self$grouping_vars)) {
-        self$data |>
+        transformed_data |>
           tukey_hsd(as.formula(sprintf("%s ~ %s", param, self$x))) |>
           dplyr::mutate(code = paste(group1, group2, sep = "-")) |>
           dplyr::select(p.adj, code)
       } else {
-        self$data |>
+        transformed_data |>
           dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(c(self$grouping_vars, self$x)), ~ ifelse(is.na(.x), 0, .x))) |>
           dplyr::group_by(dplyr::across(dplyr::all_of(self$grouping_vars))) |>
           tukey_hsd(as.formula(sprintf("%s ~ %s", param, self$x))) |>
@@ -71,7 +87,7 @@ Separator <- R6::R6Class(
     #
     # @param post_hoc_tbl post-hoc table
     # @param param column name of interest
-    compute_letters = function(post_hoc_tbl, param) {
+    compute_letters = function(post_hoc_tbl, transformed_data, param) {
       get_letters <- function(df, raw_data) {
         if (all(is.na(df$p.adj)) || all(is.nan(df$p.adj))) {
           codes <- lapply(df$code, function(c) {
@@ -106,7 +122,7 @@ Separator <- R6::R6Class(
       }
 
       if (is.null(self$grouping_vars)) {
-        letters <- get_letters(post_hoc_tbl, self$data)
+        letters <- get_letters(post_hoc_tbl, transformed_data)
 
         return(do.call(rbind, lapply(names(letters), function(name) {
           list(name) |>
@@ -117,10 +133,10 @@ Separator <- R6::R6Class(
           dplyr::mutate(code = .data[[self$x]]))
       } else {
         splited_tbls <- custom_split(post_hoc_tbl, self$grouping_vars)
-        splited_raw_tbls <- custom_split(self$data, self$grouping_vars)
+        splited_raw_tbls <- custom_split(transformed_data, self$grouping_vars)
 
         ## verify if the names are the sames
-        stopifnot(names(splited_raw_tbls) %in% names(splited_tbls))
+        stopifnot(all(names(splited_raw_tbls) %in% names(splited_tbls)))
 
         letters <- lapply(names(splited_tbls), function(name) {
           get_letters(splited_tbls[[name]], splited_raw_tbls[[name]])
@@ -147,10 +163,10 @@ Separator <- R6::R6Class(
     # attaches descriptive stats
     # @param letters_tbl dataframe containing letters
     # @param var  column in the data set
-    attach_descriptive_stats = function(letters_tbl, var) {
+    attach_descriptive_stats = function(letters_tbl, transformed_data, var) {
       selection_vars <- vec_na_rm(c(self$grouping_vars, self$x))
 
-      self$data |>
+      transformed_data |>
         dplyr::group_by(dplyr::across(dplyr::all_of(selection_vars))) |>
         dplyr::summarise(dplyr::across(.cols = -dplyr::any_of(c(self$factor_vars, self$x)), ~ get_summary(.x, self$deviation_type)), .groups = "drop") |>
         dplyr::select(dplyr::all_of(c(selection_vars, var))) |>
@@ -181,6 +197,7 @@ Separator <- R6::R6Class(
     letter.name = "letters",
     include = NULL,
     decreasing = NULL,
+    transform_func = NULL,
     #' @param data The data frame containing variables to be analyzed
     #' @param x The independent or predictor variable in the data
     #' @param factor_vars The factor variables in the data - Optional when `grouping var` argument is specified # nolint
@@ -191,6 +208,7 @@ Separator <- R6::R6Class(
     #' @param decreasing The order at which the alphabet are ranked - defaults to `FALSE` # nolint
     #' @param format The representation of the summary data in the dataframe - defaults to `plain` - options are `plain`, # nolint
     #' @param include a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value` # nolint
+    #' @param transform_func a callback that can be to transorm each dependent var in the dataset # nolint
     initialize = function(data,
                           x,
                           factor_vars = NULL,
@@ -198,7 +216,8 @@ Separator <- R6::R6Class(
                           deviation_type = "s.e",
                           format = "plain",
                           include = "p-value",
-                          decreasing = FALSE) {
+                          decreasing = FALSE,
+                          transform_func = NULL) {
       self$data <- data
       self$x <- x
       self$grouping_vars <- grouping_vars
@@ -206,6 +225,7 @@ Separator <- R6::R6Class(
       self$include <- include
       self$format <- format
       self$decreasing <- decreasing
+      self$transform_func <- transform_func
       self$factor_vars <- vec_na_rm(unique(c(
         factor_vars,
         grouping_vars
@@ -227,20 +247,27 @@ Separator <- R6::R6Class(
     #' @return list containing the groups of data set result
     separate = function() {
       if (is.null(private$results)) {
+        vars <- setdiff(colnames(self$data), c(self$factor_vars, self$x))
+
         result <- self$data |>
-          dplyr::select(-dplyr::any_of(c(self$factor_vars, self$x))) |>
+          subset(select = vars) |>
           colnames() |>
           sapply(function(var) {
-            private$run_post_hoc(var) |>
-              private$compute_letters(var) |>
-              private$attach_descriptive_stats(var) |>
-              dplyr::mutate(
-                dplyr::across(
-                  dplyr::all_of(self$x),
-                  ~ factor(.x, levels = unique(self$data[[self$x]]))
-                )
-              ) |>
-              dplyr::arrange(dplyr::across(dplyr::all_of(self$x)))
+            transformed_data <- private$transform_var(var)
+
+            res_data <- transformed_data |>
+              private$run_post_hoc(var) |>
+              private$compute_letters(transformed_data, var) |>
+              private$attach_descriptive_stats(transformed_data, var)
+
+            res_data[[self$x]] <- factor(
+              res_data[[self$x]],
+              levels = unique(transformed_data[[self$x]])
+            )
+
+            res_data <- res_data[order(res_data[[self$x]]), ]
+
+            return(res_data)
           }, simplify = FALSE)
 
         private$results <- result
@@ -262,7 +289,7 @@ Separator <- R6::R6Class(
           return(data)
         }
 
-        return(data[, -which(colnames(data) %in% self$factor_vars)])
+        return(data[, -match(self$factor_vars, colnames(data))])
       }
 
       if (is.null(private$ANOVA_result)) {
@@ -273,9 +300,13 @@ Separator <- R6::R6Class(
             ## data may have na's all through
             ## which is bad for the `aov` function
             dplyr::mutate(dplyr::across(-dplyr::any_of(self$x), ~ ifelse(is.na(.x), 0, .x))) |>
-            fastanova_test(x = self$x, add = self$include)
+            fastanova_test(
+              x = self$x,
+              include = self$include,
+              transform_func = self$transform_func
+            )
         } else {
-          user_factors <- self$factor_vars[!self$factor_vars %in% self$grouping_vars]
+          user_factors <- setdiff(self$factor_vars, self$grouping_vars)
 
           result <- self$data |>
             dplyr::select(-dplyr::any_of(user_factors)) |>
@@ -284,7 +315,11 @@ Separator <- R6::R6Class(
             ## which is bad for the `aov` function
             dplyr::mutate(dplyr::across(-dplyr::any_of(c(self$grouping_vars, self$x)), ~ ifelse(is.na(.x), 0, .x))) |>
             dplyr::group_by(dplyr::across(dplyr::all_of(self$grouping_vars))) |>
-            fastanova_test(x = self$x, add = self$include)
+            fastanova_test(
+              x = self$x,
+              include = self$include,
+              transform_func = self$transform_func
+            )
         }
 
         private$ANOVA_result <<- result
@@ -299,13 +334,31 @@ Separator <- R6::R6Class(
     #' @param include_aov Logical arguments for add results of aov to the separated mean # nolint
     #' @param order_by  Option to either order the results using independent variable (x) or the grouping vars # nolint
     #' @param rep_rm logical argument indicating to remove repitions from grouping variables # nolint
-    #' 
+    #'
     #' @return dataframe
     display_table = function(
       include_aov = TRUE,
       order_by = "x",
       rep_rm = FALSE
     ) {
+
+      # method_name <- "display_table"
+
+      # if (!method_name %in% names(private$functions_args)) {
+      #   private$functions_args[[method_name]] <- as.list(environment())
+      # }
+
+      # current_args <- c(as.list(environment()))
+      # prev_args <- c(private$functions_args[["display_table"]])
+
+      # if (all(current_args %in% prev_args)) {
+      #   new_call <- FALSE
+      # } else {
+      #   new_call <- TRUE
+
+      #   private$functions_args[[method_name]] <- as.list(environment())
+      # }
+
       get_label <- function() {
         if (length(self$include) > 1) {
           return(paste0(paste(self$include, collapse = " ("), ")"))
@@ -323,7 +376,7 @@ Separator <- R6::R6Class(
             if (!is.na(letters[i])) {
               return(paste0(
                 var_data[i],
-                format.label(letters[i],
+                format_label(letters[i],
                   self$format,
                   type = "subscript"
                 )
@@ -336,7 +389,7 @@ Separator <- R6::R6Class(
 
         return(paste0(
           data[[var]],
-          format.label(data[[self$letter.name]],
+          format_label(data[[self$letter.name]],
             self$format,
             type = "subscript"
           )
@@ -346,7 +399,7 @@ Separator <- R6::R6Class(
       if (is.null(private$table_display)) {
         if (order_by == "x") {
           order_var <- self$x
-        } else {
+        } else if (order_by == "grouping_vars") {
           order_var <- self$grouping_vars
         }
 
@@ -354,15 +407,13 @@ Separator <- R6::R6Class(
 
         seperated_means_list <- self$separate()
 
-        results <- seperated_means_list |>
-          names() |>
-          lapply(function(var) {
-            seperated_means_list[[var]] |>
-              dplyr::mutate(dplyr::across(dplyr::all_of(var), ~ insert_stats(.data, var))) |>
-              dplyr::select(dplyr::any_of(c(selection_vars, var)))
+        results <- lapply(names(seperated_means_list), function(var) {
+            sub_data <- seperated_means_list[[var]]
+            sub_data[[var]] <- insert_stats(sub_data, var)
+
+            return(sub_data[, c(selection_vars, var)])
           }) |>
-          Reduce(function(.x, .y) merge(.x, .y, by = selection_vars), x = _) |>
-          dplyr::mutate(dplyr::across(dplyr::all_of(self$x), ~ factor(.x, levels = unique(self$data[[self$x]])))) |>
+          Reduce(function(a, b) merge(a, b, by = selection_vars), x = _) |>
           dplyr::arrange(dplyr::across(dplyr::all_of(order_var)))
 
           if (rep_rm & !is.null(self$grouping_vars)) {
@@ -374,7 +425,7 @@ Separator <- R6::R6Class(
 
             ## insert labels like p-value in the data
             aov_tbl[[self$x]] <- sapply(aov_tbl[[self$x]], function(x) {
-              format.label(get_label(), self$format)
+              format_label(get_label(), self$format)
             })
 
             results <- rbind(results, aov_tbl)

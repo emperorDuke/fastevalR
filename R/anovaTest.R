@@ -10,10 +10,16 @@
 #'
 #' @param data The data frame containing variables to be analyzed
 #' @param x The independent or predictor variable in the data
-#' @param add a vector containing ANOVA statistical result to add to the final data frame - `f-value` or/and `p-value` defaults to only `p-value` # nolint
+#' @param include a vector containing ANOVA statistical result to include to the final data frame - `f-value` or/and `p-value` defaults to only `p-value` # nolint
+#' @param transform_func a callback that can be to transorm each dependent var in the dataset # nolint
 #' @return dataframe containing the ANOVA result
 #' @export
-fastanova_test <- function(data, x, add = "p-value") {
+fastanova_test <- function(
+  data,
+  x,
+  include = "p-value",
+  transform_func = NULL
+  ) {
   groups <- dplyr::group_vars(data)
 
   get_stats <- function(data, var) {
@@ -29,10 +35,10 @@ fastanova_test <- function(data, x, add = "p-value") {
       )
       names(res) <- c("f-value", "p-value")
 
-      if (length(add) > 1) {
-        p_val <- paste0(paste(res[add], collapse = " ("), ")")
+      if (length(include) > 1) {
+        p_val <- paste0(paste(res[include], collapse = " ("), ")")
       } else {
-        p_val <- res[[add]]
+        p_val <- res[[include]]
       }
     }
 
@@ -40,11 +46,16 @@ fastanova_test <- function(data, x, add = "p-value") {
   }
 
   if (length(groups) > 0) {
-    splitted_data <- split(data, as.list(data[, groups]))
-
     data_vars <- colnames(data[, -which(colnames(data) %in% c(groups, x))])
 
     re_data <- lapply(data_vars, function(var) {
+
+      if (!is.null(transform_func)) {
+        data <- transform_func(data[, c(groups, x, var)])
+      }
+
+      splitted_data <- split(data, as.list(data[, groups]))
+
       do.call(rbind, lapply(names(splitted_data), function(name) {
         p_val <- get_stats(splitted_data[[name]], var)
 
@@ -57,9 +68,10 @@ fastanova_test <- function(data, x, add = "p-value") {
       }))
     })
 
-    merged_data <- Reduce(function(.x, .y) {
-      merge(.x, .y, by = c(groups, x))
-    }, x = re_data)
+    merged_data <- Reduce(
+      function(a, b) merge(a, b, by = c(groups, x)),
+      x = re_data
+    )
 
     return(merged_data)
   }
@@ -70,6 +82,10 @@ fastanova_test <- function(data, x, add = "p-value") {
       dplyr::select(-dplyr::any_of(x)) |>
       colnames() |>
       lapply(function(var) {
+        if (!is.null(transform_func)) {
+          data <- transform_func(data[, c(groups, x, var)])
+        }
+
         p_val <- get_stats(data[, c(var, x)], var)
 
         as.data.frame(stats::setNames(list("...", p_val), c(x, var)))
