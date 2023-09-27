@@ -16,5 +16,5 @@ character vector
 }
 \description{
 It finds the mean and standard error of a numeric vector
-and formats then using  +/-.
+and formats then using ±.
 }

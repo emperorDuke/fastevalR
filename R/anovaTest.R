@@ -46,7 +46,7 @@ fastanova_test <- function(
   }
 
   if (length(groups) > 0) {
-    data_vars <- colnames(data[, -which(colnames(data) %in% c(groups, x))])
+    data_vars <- setdiff(colnames(data), c(groups, x))
 
     re_data <- lapply(data_vars, function(var) {
 

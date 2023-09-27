@@ -87,6 +87,8 @@ test_that(
   )
 
   result <- obj$table_summary()
+
+  print(result)
   label <- as.character(result[[1]][[1]])[nrow(result[[1]])]
 
   expect_equal(
@@ -230,4 +232,9 @@ test_that("table summary function works when data is transformed", {
   expect_equal(nrow(result[[1]]), n_month + 2)
   expect_equal(as.character(result[[1]]$month[seq_len(n_month)]), month.name)
   expect_equal(label, " p-value")
+  expect_true(
+    grepl(
+      "[\\d\\.]+", result[[1]][[2]][nrow(result[[2]])], perl = TRUE
+    )
+  )
 })

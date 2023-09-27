@@ -1,7 +1,7 @@
 test_that("get summary works", {
   data <- data.frame(
     month = rep(month.abb[1:4], 4),
-    gender = rep(c('M', 'F'), each = 8),
+    gender = rep(c("M", "F"), each = 8),
     age = c(rnorm(8, mean = 66.4), rnorm(8, mean = 60.4))
   )
 

@@ -50,21 +50,17 @@ binder_1 <- function(ls_summary, grouping_vars) {
 #' @export
 binder_2 <- function(post_hoc_tbl, aov_tbl) {
     char_vars <- sapply(colnames(post_hoc_tbl), function(c) {
-        var <- post_hoc_tbl[[c]]
-        var <- var[!is.na(var)]
+        var <- vec_na_rm(post_hoc_tbl[[c]])
 
-        if (!any(grepl("±", var, perl = TRUE))) {
+        if (!any(grepl("\u00B1", var, perl = TRUE))) {
             return(c)
         }
-
-        return(NA)
     })
 
-    factor_vars <- char_vars[!is.na(char_vars)]
+    factor_vars <- vec_na_rm(unlist(char_vars))
     post_hoc_tbl_vars <- colnames(post_hoc_tbl)
 
-    factor_vars <- post_hoc_tbl_vars[post_hoc_tbl_vars %in% factor_vars]
-    non_factor_vars <- post_hoc_tbl_vars[!post_hoc_tbl_vars %in% factor_vars]
+    non_factor_vars <- setdiff(post_hoc_tbl_vars, factor_vars)
 
     terms <- aov_tbl[[1]]
 

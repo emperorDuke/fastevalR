@@ -16,7 +16,8 @@ Imports:
   R6,
   stringr,
   multcompView,
-  stats
+  stats,
+  broom
 RoxygenNote: 7.2.3
 Suggests: 
     knitr,

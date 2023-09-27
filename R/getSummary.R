@@ -1,7 +1,9 @@
 #' Format descriptive stats summary
 #'
 #' It finds the mean and standard error of a numeric vector
-#' and formats then using  +/-.
+#' and formats then using ±.
+#'
+#' @importFrom stats sd
 #'
 #' @param x numeric vector to be summarized
 #' @param spread deviation type

@@ -4,6 +4,7 @@
 #'
 #' @importFrom methods new
 #' @importFrom stats setNames
+#' @importFrom stats as.formula
 #' @import stringr
 #' @import lodaR
 #' @import dplyr
@@ -68,14 +69,14 @@ Separator <- R6::R6Class(
     run_post_hoc = function(transformed_data, param) {
       if (is.null(self$grouping_vars)) {
         transformed_data |>
-          tukey_hsd(as.formula(sprintf("%s ~ %s", param, self$x))) |>
+          tukey_hsd(stats::as.formula(sprintf("%s ~ %s", param, self$x))) |>
           dplyr::mutate(code = paste(group1, group2, sep = "-")) |>
           dplyr::select(p.adj, code)
       } else {
         transformed_data |>
           dplyr::mutate(dplyr::across(.cols = -dplyr::any_of(c(self$grouping_vars, self$x)), ~ ifelse(is.na(.x), 0, .x))) |>
           dplyr::group_by(dplyr::across(dplyr::all_of(self$grouping_vars))) |>
-          tukey_hsd(as.formula(sprintf("%s ~ %s", param, self$x))) |>
+          tukey_hsd(stats::as.formula(sprintf("%s ~ %s", param, self$x))) |>
           dplyr::arrange(dplyr::across(dplyr::all_of(self$grouping_vars))) |>
           dplyr::mutate(combo1 = merge_vars(.data, self$grouping_vars, group1, self$code_seperator)) |>
           dplyr::mutate(combo2 = merge_vars(.data, self$grouping_vars, group2, self$code_seperator)) |>
@@ -299,7 +300,10 @@ Separator <- R6::R6Class(
             ## change all na's to 0 because some section of the
             ## data may have na's all through
             ## which is bad for the `aov` function
-            dplyr::mutate(dplyr::across(-dplyr::any_of(self$x), ~ ifelse(is.na(.x), 0, .x))) |>
+            dplyr::mutate(dplyr::across(
+              -dplyr::any_of(self$x),
+              ~ ifelse(is.na(.x), 0, .x))
+            ) |>
             fastanova_test(
               x = self$x,
               include = self$include,
@@ -313,7 +317,10 @@ Separator <- R6::R6Class(
             ## change all na's to 0 because some section of the
             ## data may have na's all through
             ## which is bad for the `aov` function
-            dplyr::mutate(dplyr::across(-dplyr::any_of(c(self$grouping_vars, self$x)), ~ ifelse(is.na(.x), 0, .x))) |>
+            dplyr::mutate(dplyr::across(
+              -dplyr::any_of(c(self$grouping_vars, self$x)),
+              ~ ifelse(is.na(.x), 0, .x)
+              )) |>
             dplyr::group_by(dplyr::across(dplyr::all_of(self$grouping_vars))) |>
             fastanova_test(
               x = self$x,
@@ -331,41 +338,12 @@ Separator <- R6::R6Class(
     #' displays a human readable table
     #'
     #' It display human readable dataframe
-    #' @param include_aov Logical arguments for add results of aov to the separated mean # nolint
+    #' 
     #' @param order_by  Option to either order the results using independent variable (x) or the grouping vars # nolint
     #' @param rep_rm logical argument indicating to remove repitions from grouping variables # nolint
     #'
     #' @return dataframe
-    display_table = function(
-      include_aov = TRUE,
-      order_by = "x",
-      rep_rm = FALSE
-    ) {
-
-      # method_name <- "display_table"
-
-      # if (!method_name %in% names(private$functions_args)) {
-      #   private$functions_args[[method_name]] <- as.list(environment())
-      # }
-
-      # current_args <- c(as.list(environment()))
-      # prev_args <- c(private$functions_args[["display_table"]])
-
-      # if (all(current_args %in% prev_args)) {
-      #   new_call <- FALSE
-      # } else {
-      #   new_call <- TRUE
-
-      #   private$functions_args[[method_name]] <- as.list(environment())
-      # }
-
-      get_label <- function() {
-        if (length(self$include) > 1) {
-          return(paste0(paste(self$include, collapse = " ("), ")"))
-        }
-
-        return(self$include)
-      }
+    display_table = function(order_by = "x", rep_rm = FALSE) {
 
       insert_stats <- function(data, var) {
         letters <- data[[self$letter.name]]
@@ -420,17 +398,6 @@ Separator <- R6::R6Class(
             results <- remove_repititions(results, self$grouping_vars)
           }
 
-          if (include_aov) {
-            aov_tbl <- private$ANOVA_result
-
-            ## insert labels like p-value in the data
-            aov_tbl[[self$x]] <- sapply(aov_tbl[[self$x]], function(x) {
-              format_label(get_label(), self$format)
-            })
-
-            results <- rbind(results, aov_tbl)
-          }
-
         private$table_display <<- results
 
         return(results)
@@ -444,7 +411,22 @@ Separator <- R6::R6Class(
     #'
     #' @return list | dataframe
     table_summary = function() {
-      tbl <- self$display_table()
+      get_label <- function() {
+        if (length(self$include) > 1) {
+          return(paste0(paste(self$include, collapse = " ("), ")"))
+        }
+
+        return(self$include)
+      }
+
+      aov_tbl <- self$compute_ANOVA()
+
+      ## insert labels like p-value in the data
+      aov_tbl[[self$x]] <- sapply(aov_tbl[[self$x]], function(x) {
+        format_label(get_label(), self$format)
+      })
+
+      tbl <- rbind(self$display_table(), aov_tbl)
 
       if (is.null(self$grouping_vars)) {
         spacer <- sapply(colnames(tbl), function(c) "...", simplify = FALSE)

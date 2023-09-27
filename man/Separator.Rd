@@ -129,14 +129,12 @@ It display human readable dataframe
 \if{latex}{\out{\hypertarget{method-Separator-display_table}{}}}
 \subsection{Method \code{display_table()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Separator$display_table(include_aov = TRUE, order_by = "x", rep_rm = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Separator$display_table(order_by = "x", rep_rm = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{include_aov}}{Logical arguments for add results of aov to the separated mean # nolint}
-
 \item{\code{order_by}}{Option to either order the results using independent variable (x) or the grouping vars # nolint}
 
 \item{\code{rep_rm}}{logical argument indicating to remove repitions from grouping variables # nolint}
