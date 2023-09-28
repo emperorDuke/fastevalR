@@ -153,9 +153,16 @@ It create a summary of all the possible groups if there are any
 \if{latex}{\out{\hypertarget{method-Separator-table_summary}{}}}
 \subsection{Method \code{table_summary()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Separator$table_summary()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Separator$table_summary(bind_ls = FALSE)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{bind_ls}}{option to convert the list result to dataframe}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 list | dataframe
 }

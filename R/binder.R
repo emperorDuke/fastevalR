@@ -9,7 +9,10 @@
 #' @return dataframe
 #' @export
 binder_1 <- function(ls_summary, grouping_vars) {
-    ls_df <- lapply(names(ls_summary), function(name) {
+    ls_names <- names(ls_summary)
+    ls_names <- ls_names[order(ls_names)]
+
+    ls_df <- lapply(ls_names, function(name) {
         df <- ls_summary[[name]]
         has_groups <- grepl("^[\\w]+((\\.){1,1}[\\w]+)+$", name, perl = TRUE)
         val_space <- nrow(df) - 2
@@ -23,15 +26,21 @@ binder_1 <- function(ls_summary, grouping_vars) {
                 })
             )
 
+            filler[nrow(filler), 1] <- as.character(df[nrow(df), 1])
+            df[nrow(df), 1] <- "..."
+
             colnames(filler) <- grouping_vars
 
-            return(cbind(df, filler))
+            return(cbind(filler, df))
         } else {
             filler <- data.frame(x = c(rep(name, val_space), "...", "..."))
 
+            filler[nrow(filler), 1] <- as.character(df[nrow(df), 1])
+            df[nrow(df), 1] <- "..."
+
             colnames(filler) <- grouping_vars
 
-            return(cbind(df, filler))
+            return(cbind(filler, df))
         }
     })
 

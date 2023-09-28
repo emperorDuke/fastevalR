@@ -88,7 +88,6 @@ test_that(
 
   result <- obj$table_summary()
 
-  print(result)
   label <- as.character(result[[1]][[1]])[nrow(result[[1]])]
 
   expect_equal(
@@ -112,6 +111,9 @@ test_that(
   )
 
   result <- obj$table_summary()
+
+  print(obj$table_summary(TRUE))
+
   label <- as.character(result[[1]][[1]])[nrow(result[[1]])]
 
   expect_equal(
@@ -146,6 +148,7 @@ variable and one factor variable", {
   )
 
   result <- obj$table_summary()
+
   label <- as.character(result[[1]][[1]])[nrow(result[[1]])]
 
   expect_equal(length(result), length(unique(data$gender)))

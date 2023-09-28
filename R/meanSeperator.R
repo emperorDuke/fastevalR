@@ -30,10 +30,8 @@
 Separator <- R6::R6Class(
   "Separator",
   private = list(
-    table_display = NULL,
     ANOVA_result = NULL,
     results = NULL,
-    functions_args = list(),
     # transforms the data for every var
     #
     # @param var varible pf interest
@@ -374,43 +372,38 @@ Separator <- R6::R6Class(
         ))
       }
 
-      if (is.null(private$table_display)) {
-        if (order_by == "x") {
-          order_var <- self$x
-        } else if (order_by == "grouping_vars") {
-          order_var <- self$grouping_vars
-        }
-
-        selection_vars <- vec_na_rm(c(self$grouping_vars, self$x))
-
-        seperated_means_list <- self$separate()
-
-        results <- lapply(names(seperated_means_list), function(var) {
-            sub_data <- seperated_means_list[[var]]
-            sub_data[[var]] <- insert_stats(sub_data, var)
-
-            return(sub_data[, c(selection_vars, var)])
-          }) |>
-          Reduce(function(a, b) merge(a, b, by = selection_vars), x = _) |>
-          dplyr::arrange(dplyr::across(dplyr::all_of(order_var)))
-
-          if (rep_rm & !is.null(self$grouping_vars)) {
-            results <- remove_repititions(results, self$grouping_vars)
-          }
-
-        private$table_display <<- results
-
-        return(results)
-      } else {
-        return(private$table_display)
+      if (order_by == "x") {
+        order_var <- self$x
+      } else if (order_by == "grouping_vars") {
+        order_var <- self$grouping_vars
       }
+
+      selection_vars <- vec_na_rm(c(self$grouping_vars, self$x))
+
+      seperated_means_list <- self$separate()
+
+      results <- lapply(names(seperated_means_list), function(var) {
+          sub_data <- seperated_means_list[[var]]
+          sub_data[[var]] <- insert_stats(sub_data, var)
+
+          return(sub_data[, c(selection_vars, var)])
+        }) |>
+        Reduce(function(a, b) merge(a, b, by = selection_vars), x = _) |>
+        dplyr::arrange(dplyr::across(dplyr::all_of(order_var)))
+
+      if (rep_rm & !is.null(self$grouping_vars)) {
+        results <- remove_repititions(results, self$grouping_vars)
+      }
+
+      return(results)
     },
     #' Create a table summary for all the groups
     #'
     #' It create a summary of all the possible groups if there are any
+    #' @param bind_ls option to convert the list result to dataframe
     #'
     #' @return list | dataframe
-    table_summary = function() {
+    table_summary = function(bind_ls = FALSE) {
       get_label <- function() {
         if (length(self$include) > 1) {
           return(paste0(paste(self$include, collapse = " ("), ")"))
@@ -458,6 +451,10 @@ Separator <- R6::R6Class(
 
           return(all_sections)
         })
+      }
+
+      if (bind_ls) {
+        summary <- binder_1(summary, self$grouping_vars)
       }
 
       return(summary)
