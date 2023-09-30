@@ -38,8 +38,7 @@ Separator <- R6::R6Class(
     transform_var = function(var) {
       if (!is.null(self$transform_func)) {
         transform_data <- self$transform_func(
-          self$data[, c(self$factor_vars, self$x, var)],
-          var
+          self$data[, c(self$factor_vars, self$x, var)]
         )
 
         return(transform_data)

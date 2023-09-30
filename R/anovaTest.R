@@ -51,7 +51,7 @@ fastanova_test <- function(
     re_data <- lapply(data_vars, function(var) {
 
       if (!is.null(transform_func)) {
-        data <- transform_func(data[, c(groups, x, var)], var)
+        data <- transform_func(data[, c(groups, x, var)])
       }
 
       splitted_data <- split(data, as.list(data[, groups]))
@@ -82,7 +82,7 @@ fastanova_test <- function(
       colnames() |>
       lapply(function(var) {
         if (!is.null(transform_func)) {
-          data <- transform_func(data[, c(groups, x, var)], var)
+          data <- transform_func(data[, c(groups, x, var)])
         }
 
         p_val <- get_stats(data[, c(var, x)], var)
