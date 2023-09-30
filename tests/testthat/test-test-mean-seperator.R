@@ -112,8 +112,6 @@ test_that(
 
   result <- obj$table_summary()
 
-  print(obj$table_summary(TRUE))
-
   label <- as.character(result[[1]][[1]])[nrow(result[[1]])]
 
   expect_equal(
