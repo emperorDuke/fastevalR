@@ -81,7 +81,12 @@ fastanova_test_2 <- function(
         formula_str <- sprintf("%s ~ %s", var, btw_vars)
 
         if (!is.null(transform_func)) {
-            data <- transform_func(data[, c(factor_vars, var)])
+            data <- transform_func(
+                list(
+                    data = data[, c(factor_vars, var)],
+                    variable = var
+                )
+            )
         }
 
         if (!is.null(stratum)) {
