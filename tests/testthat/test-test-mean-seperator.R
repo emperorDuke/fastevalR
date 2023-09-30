@@ -210,9 +210,7 @@ test_that("table summary function works when data is transformed", {
     deviation_type = "sd",
     decreasing = TRUE,
     grouping_vars = c("gender", "location"),
-    transform_func = function(bag) {
-      df <- bag$data
-
+    transform_func = function(df, var = NULL) {
       df$month <- factor(
         df$month,
         levels = month.abb,
