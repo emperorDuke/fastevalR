@@ -93,12 +93,14 @@ fastanova_test_2 <- function(
         )
 
         if ("stratum" %in% colnames(res)) {
-            index <- join_str(":", vec_na_rm(c(wid, within)))
+            if (!any(res$stratum == "Within")) {
+                warning("There is no within stratum in aov result")
 
-            if (any(res$stratum == "Within")) {
-                res <- get_terms(res[res$stratum == "Within", ])
+                idx <- join_str(":", vec_na_rm(c(wid, within)))
+
+                res <- get_terms(res[res$stratum == idx, ])
             } else {
-                res <- get_terms(res[res$stratum == index, ])
+                res <- get_terms(res[res$stratum == "Within", ])
             }
         } else {
             res <- get_terms(res)

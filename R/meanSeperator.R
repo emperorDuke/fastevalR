@@ -248,10 +248,7 @@ Separator <- R6::R6Class(
       if (is.null(private$results)) {
         vars <- setdiff(colnames(self$data), c(self$factor_vars, self$x))
 
-        result <- self$data |>
-          subset(select = vars) |>
-          colnames() |>
-          sapply(function(var) {
+        result <- sapply(vars, function(var) {
             transformed_data <- private$transform_var(var)
 
             res_data <- transformed_data |>

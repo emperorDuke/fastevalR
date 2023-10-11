@@ -16,7 +16,7 @@ tukey_hsd <- function(data, formula) {
   get_splitted_data <- function(groups_vrs) {
     if (length(grouping_vars) > 1) {
       groups_vrs <- as.data.frame(apply(groups_vrs, 2, as.character))
-      splitted_data <- split(data, as.list(groups_vrs))
+      splitted_data <- split(data, as.list(groups_vrs), sep = "@")
     } else {
       groups_vrs <- sapply(groups_vrs, as.character)
       splitted_data <- split(data, groups_vrs)
@@ -54,11 +54,10 @@ tukey_hsd <- function(data, formula) {
       lapply(function(name) {
         post_hoc_groups <- get_post_hoc_groups(formula, splitted_data[[name]])
 
-        group_vars <- grouping_vars |>
-          seq() |>
+        group_vars <- seq_along(grouping_vars) |>
           lapply(function(i) {
             rep(
-              unlist(strsplit(name, ".", fixed = TRUE))[i],
+              unlist(strsplit(name, "@", fixed = TRUE))[i],
               nrow(post_hoc_groups)
             )
           }) |>

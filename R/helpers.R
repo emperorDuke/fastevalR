@@ -60,14 +60,14 @@ merge_vars <- function(data, grouping_vars, var, separator) {
 #' @param data data to be splited
 #' @param x vector or list of data that will be used to split the data
 #' @return list of splited data
-custom_split <- function(data, x) {
+custom_split <- function(data, x, sep = ".") {
   splitting_vars <- data[, x]
 
   if (length(x) > 1) {
     splitting_vars <- as.list(splitting_vars)
   }
 
-  return(split(data, splitting_vars))
+  return(split(data, splitting_vars, sep = sep))
 }
 
 #'Convert repetitions into elipsis
