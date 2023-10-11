@@ -94,7 +94,10 @@ fastanova_test_2 <- function(
 
         if ("stratum" %in% colnames(res)) {
             if (!any(res$stratum == "Within")) {
-                warning("There is no within stratum in aov result")
+                warning("There is no within stratum in aov result, 
+                    so an interaction between `wid` and `within variables` 
+                    are showed"
+                )
 
                 idx <- join_str(":", vec_na_rm(c(wid, within)))
 

@@ -54,12 +54,12 @@ fastanova_test <- function(
         data <- transform_func(data[, c(groups, x, var)])
       }
 
-      splitted_data <- split(data, as.list(data[, groups]))
+      splitted_data <- split(data, as.list(data[, groups]), sep = "@")
 
       do.call(rbind, lapply(names(splitted_data), function(name) {
         p_val <- get_stats(splitted_data[[name]], var)
 
-        data_vars_vec <- unlist(strsplit(name, ".", fixed = TRUE))
+        data_vars_vec <- unlist(strsplit(name, "@", fixed = TRUE))
         data_vars_vec <- c(data_vars_vec, "...", p_val)
 
         names(data_vars_vec) <- c(groups, x, var)
