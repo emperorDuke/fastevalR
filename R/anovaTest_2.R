@@ -25,110 +25,110 @@ fastanova_test_2 <- function(
     term = "all",
     btw_terms_sep = "+",
     within_terms_sep = "*",
-    transform_func = NULL
-) {
+    transform_func = NULL) {
+  join_str <- function(sep = "*", vars) {
+    Reduce(function(a, b) paste(a, b, sep = sep), vars)
+  }
 
-    join_str <- function(sep = "*", vars) {
-        Reduce(function(a, b) paste(a, b, sep = sep), vars)
+  get_terms <- function(data, btw_vars = between) {
+    res_btw_var <- join_str(":", btw_vars)
+
+    if (term == "all") {
+      res <- data[data$term != "Residuals", ]
+    } else if (term == "marginal") {
+      res <- data[data$term %in% btw_vars, ]
+    } else if (term == "interaction") {
+      res <- data[data$term == res_btw_var, ]
     }
 
-    get_terms <- function(data, btw_vars = between) {
-        res_btw_var <- join_str(":", btw_vars)
+    return(res)
+  }
 
-        if (term == "all") {
-            res <- data[data$term != "Residuals", ]
-        } else if (term == "marginal") {
-            res <- data[data$term %in% btw_vars, ]
-        } else if (term == "interaction") {
-            res <- data[data$term == res_btw_var, ]
-        }
+  char_vars <- sapply(colnames(data), function(c) {
+    vec <- data[[c]][!is.na(data[[c]])]
 
-        return(res)
+    if (!is.numeric(vec)) {
+      return(c)
     }
 
-    char_vars <- sapply(colnames(data), function(c) {
-        vec <- data[[c]][!is.na(data[[c]])]
+    return(NA)
+  })
 
-        if (!is.numeric(vec)) {
-            return(c)
-        }
+  factor_vars <- unique(c(wid, char_vars[!is.na(char_vars)]))
+  vars <- colnames(data[, -which(colnames(data) %in% factor_vars)])
+  btw_vars <- join_str(btw_terms_sep, between)
+  args_vars <- vec_na_rm(unique(c(within, between)))
 
-        return(NA)
-    })
-
-    factor_vars <- unique(c(wid, char_vars[!is.na(char_vars)]))
-    vars <- colnames(data[, -which(colnames(data) %in% factor_vars)])
-    btw_vars  <- join_str(btw_terms_sep, between)
-    args_vars <- vec_na_rm(unique(c(within, between)))
-
-    stratum <- NULL
+  stratum <- NULL
 
 
-    if (!is.null(within)) {
-        withn_vars <- join_str(within_terms_sep, within)
-        stratum <- sprintf("Error(%s)", withn_vars)
+  if (!is.null(within)) {
+    withn_vars <- join_str(within_terms_sep, within)
+    stratum <- sprintf("Error(%s)", withn_vars)
 
-        if (!is.null(wid)) {
-            stratum <- sprintf("Error(%s / %s)", wid, withn_vars)
-        }
+    if (!is.null(wid)) {
+      stratum <- sprintf("Error(%s / %s)", wid, withn_vars)
+    }
+  }
+
+  if (!is.null(wid) && is.null(within)) {
+    stratum <- sprintf("Error(%s)", wid)
+  }
+
+  stats_res <- lapply(vars, function(var) {
+    formula_str <- sprintf("%s ~ %s", var, btw_vars)
+
+    if (!is.null(transform_func)) {
+      data <- transform_func(data[, c(factor_vars, var)])
     }
 
-    if (!is.null(wid) && is.null(within)) {
-        stratum <- sprintf("Error(%s)", wid)
+    if (!is.null(stratum)) {
+      formula_str <- paste(formula_str, stratum, sep = "+")
     }
 
-    stats_res <- lapply(vars, function(var) {
-        formula_str <- sprintf("%s ~ %s", var, btw_vars)
+    res <- broom::tidy(
+      stats::aov(stats::as.formula(formula_str), data = data)
+    )
 
-        if (!is.null(transform_func)) {
-            data <- transform_func(data[, c(factor_vars, var)])
-        }
+    if ("stratum" %in% colnames(res)) {
+      if (!any(res$stratum == "Within")) {
+        warning("There is no within stratum in aov result,
+                    so an interaction between `wid` and `within variables`
+                    are showed")
 
-        if (!is.null(stratum)) {
-            formula_str <- paste(formula_str, stratum, sep = "+")
-        }
+        idx <- join_str(":", vec_na_rm(c(wid, within)))
 
-        res <- broom::tidy(
-            stats::aov(stats::as.formula(formula_str), data = data)
-        )
+        res <- get_terms(res[res$stratum == idx, ])
+      } else {
+        res <- get_terms(res[res$stratum == "Within", ])
+      }
+    } else {
+      res <- get_terms(res)
+    }
 
-        if ("stratum" %in% colnames(res)) {
-            if (!any(res$stratum == "Within")) {
-                warning("There is no within stratum in aov result, 
-                    so an interaction between `wid` and `within variables` 
-                    are showed"
-                )
+    mat_data_arg <- c(
+      unlist(lapply(args_vars, function(b) rep(b, length(res$p.value)))),
+      sapply(res$p.value, function(p) sprintf("%.2f", p))
+    )
 
-                idx <- join_str(":", vec_na_rm(c(wid, within)))
+    mat <- matrix(
+      data = mat_data_arg,
+      ncol = length(args_vars) + 1,
+      nrow = length(res$p.value)
+    )
 
-                res <- get_terms(res[res$stratum == idx, ])
-            } else {
-                res <- get_terms(res[res$stratum == "Within", ])
-            }
-        } else {
-            res <- get_terms(res)
-        }
+    dimnames(mat) <- list(res$term, c(args_vars, var))
 
-        mat_data_arg <- c(
-            unlist(lapply(args_vars, function(b) rep(b, length(res$p.value)))),
-            sapply(res$p.value, function(p) sprintf("%.2f", p))
-        )
+    mat[, seq_along(args_vars)] <- "..."
+    mat[, 1] <- paste0(lodaR::capitalize(res$term), " **(p value)**")
 
-        mat <- matrix(
-            data = mat_data_arg,
-            ncol = length(args_vars) + 1,
-            nrow = length(res$p.value)
-        )
+    return(mat)
+  })
 
-        dimnames(mat) <- list(res$term, c(args_vars, var))
+  mat_res <- Reduce(
+    function(a, b) merge(a, b, by = args_vars, all = TRUE),
+    x = stats_res
+  )
 
-        mat[, seq_along(args_vars)] <- "..."
-        mat[, 1] <- paste0(lodaR::capitalize(res$term), " **(p value)**")
-
-        return(mat)
-    })
-
-    mat_res <- Reduce(function(a, b) merge(a, b, by = args_vars), x = stats_res)
-
-    return(mat_res)
+  return(mat_res)
 }
