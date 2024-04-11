@@ -176,13 +176,30 @@ Separator <- R6::R6Class(
         dplyr::rename_with(~ ifelse(stringr::str_detect(.x, ".x"), lodaR::extract_chars(stringr::str_extract(.x, "^[a-z\\.]+(?=x)")), .x)) |>
         dplyr::mutate(
           mean = lodaR::extract_chars(.data[[var]], "^[\\d\\.\\-]+(?=\\s)"),
-          s.e = lodaR::extract_chars(.data[[var]], "(?<=\\s)[\\d\\.\\-]+"),
-          mean = sapply(mean, function(.x) ifelse(stringr::str_detect(.x, "^[\\d]+"), as.numeric(.x), NA)),
-          s.e = sapply(s.e, function(.x) ifelse(stringr::str_detect(.x, "^[\\d]+"), as.numeric(.x), NA)),
+          spread = lodaR::extract_chars(.data[[var]], "(?<=\\s)[\\d\\.\\-]+"),
+          mean = sapply(
+            mean,
+            function(.x) {
+              ifelse(
+                stringr::str_detect(.x, "^[\\d]+"),
+                as.numeric(.x),
+                NA
+              )
+            }
+          ),
+          spread = sapply(
+            spread,
+            function(.x) {
+              ifelse(
+                stringr::str_detect(.x, "^[\\d]+"),
+                as.numeric(.x), NA
+              )
+            }
+          ),
           y.pt = mean + s.e
         ) |>
         dplyr::relocate(dplyr::any_of(selection_vars), .before = dplyr::all_of(var)) |>
-        dplyr::rename_with(~ ifelse(.x == "s.e", self$deviation_type, .x))
+        dplyr::rename_with(~ ifelse(.x == "spread", self$deviation_type, .x))
     }
   ),
   public = list(
@@ -249,22 +266,22 @@ Separator <- R6::R6Class(
         vars <- setdiff(colnames(self$data), c(self$factor_vars, self$x))
 
         result <- sapply(vars, function(var) {
-            transformed_data <- private$transform_var(var)
+          transformed_data <- private$transform_var(var)
 
-            res_data <- transformed_data |>
-              private$run_post_hoc(var) |>
-              private$compute_letters(transformed_data, var) |>
-              private$attach_descriptive_stats(transformed_data, var)
+          res_data <- transformed_data |>
+            private$run_post_hoc(var) |>
+            private$compute_letters(transformed_data, var) |>
+            private$attach_descriptive_stats(transformed_data, var)
 
-            res_data[[self$x]] <- factor(
-              res_data[[self$x]],
-              levels = unique(transformed_data[[self$x]])
-            )
+          res_data[[self$x]] <- factor(
+            res_data[[self$x]],
+            levels = unique(transformed_data[[self$x]])
+          )
 
-            res_data <- res_data[order(res_data[[self$x]]), ]
+          res_data <- res_data[order(res_data[[self$x]]), ]
 
-            return(res_data)
-          }, simplify = FALSE)
+          return(res_data)
+        }, simplify = FALSE)
 
         private$results <- result
         self$compute_ANOVA()
@@ -297,8 +314,8 @@ Separator <- R6::R6Class(
             ## which is bad for the `aov` function
             dplyr::mutate(dplyr::across(
               -dplyr::any_of(self$x),
-              ~ ifelse(is.na(.x), 0, .x))
-            ) |>
+              ~ ifelse(is.na(.x), 0, .x)
+            )) |>
             fastanova_test(
               x = self$x,
               include = self$include,
@@ -315,7 +332,7 @@ Separator <- R6::R6Class(
             dplyr::mutate(dplyr::across(
               -dplyr::any_of(c(self$grouping_vars, self$x)),
               ~ ifelse(is.na(.x), 0, .x)
-              )) |>
+            )) |>
             dplyr::group_by(dplyr::across(dplyr::all_of(self$grouping_vars))) |>
             fastanova_test(
               x = self$x,
@@ -333,13 +350,12 @@ Separator <- R6::R6Class(
     #' displays a human readable table
     #'
     #' It display human readable dataframe
-    #' 
-    #' @param order_by  Option to either order the results using independent variable (x) or the grouping vars # nolint
+    #'
+    #' @param order_by  Option to either order the results using independent variable `x` | `grouping_vars` | `all` # nolint
     #' @param rep_rm logical argument indicating to remove repitions from grouping variables # nolint
     #'
     #' @return dataframe
-    display_table = function(order_by = "x", rep_rm = FALSE) {
-
+    display_table = function(order_by = "all", rep_rm = FALSE) {
       insert_stats <- function(data, var) {
         letters <- data[[self$letter.name]]
         var_data <- data[[var]]
@@ -373,6 +389,8 @@ Separator <- R6::R6Class(
         order_var <- self$x
       } else if (order_by == "grouping_vars") {
         order_var <- self$grouping_vars
+      } else if (order_by == "all") {
+        order_var <- c(self$grouping_vars, self$x)
       }
 
       selection_vars <- vec_na_rm(c(self$grouping_vars, self$x))
@@ -380,11 +398,11 @@ Separator <- R6::R6Class(
       seperated_means_list <- self$separate()
 
       results <- lapply(names(seperated_means_list), function(var) {
-          sub_data <- seperated_means_list[[var]]
-          sub_data[[var]] <- insert_stats(sub_data, var)
+        sub_data <- seperated_means_list[[var]]
+        sub_data[[var]] <- insert_stats(sub_data, var)
 
-          return(sub_data[, c(selection_vars, var)])
-        }) |>
+        return(sub_data[, c(selection_vars, var)])
+      }) |>
         Reduce(function(a, b) merge(a, b, by = selection_vars), x = _) |>
         dplyr::arrange(dplyr::across(dplyr::all_of(order_var)))
 

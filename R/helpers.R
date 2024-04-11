@@ -5,14 +5,17 @@ format_label <- function(label,
     return(paste0(" ", label))
   }
 
-  html_list <- c(bold = "<strong>%s</strong>",
-                 subscript = "<sup>%s</sup>")
+  html_list <- c(
+    bold = "<strong>%s</strong>",
+    subscript = "<sup>%s</sup>"
+  )
 
-  markdown <- c(bold = "**%s**",
-                subscript = "^%s^")
+  markdown <- c(
+    bold = "**%s**",
+    subscript = "^%s^"
+  )
 
-  return(switch(
-    format,
+  return(switch(format,
     html = sprintf(html_list[[type]], label),
     md = sprintf(markdown[[type]], label)
   ))
@@ -41,8 +44,7 @@ merge_vars <- function(data, grouping_vars, var, separator) {
       dplyr::transmute(code = paste(
         dplyr::c_across(cols = dplyr::everything()),
         collapse = separator
-        )
-      )
+      ))
 
     vars <- vars$code
   } else {
@@ -70,27 +72,27 @@ custom_split <- function(data, x, sep = ".") {
   return(split(data, splitting_vars, sep = sep))
 }
 
-#'Convert repetitions into elipsis
+#' Convert repetitions into elipsis
 #'
 #' @param df_ dataframe
 #' @param vars columns in the dataframe to focus on
 #' @return dataframe
 remove_repititions <- function(df_, vars) {
-    df <- df_
+  df <- df_
 
-    for (var in vars) {
-        current_obs <- ""
+  for (var in vars) {
+    current_obs <- ""
 
-        for (i in seq_along(df[[var]])) {
-            t <- df[[var]][i]
+    for (i in seq_along(df[[var]])) {
+      t <- df[[var]][i]
 
-            if (t != current_obs) {
-                current_obs <- t
-            } else {
-                df[[var]][i] <- "..."
-            }
-        }
+      if (t != current_obs) {
+        current_obs <- t
+      } else {
+        df[[var]][i] <- "..."
+      }
     }
+  }
 
-    return(df)
+  return(df)
 }

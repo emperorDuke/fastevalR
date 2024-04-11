@@ -15,11 +15,10 @@
 #' @return dataframe containing the ANOVA result
 #' @export
 fastanova_test <- function(
-  data,
-  x,
-  include = "p-value",
-  transform_func = NULL
-  ) {
+    data,
+    x,
+    include = "p-value",
+    transform_func = NULL) {
   groups <- dplyr::group_vars(data)
 
   get_stats <- function(data, var) {
@@ -49,7 +48,6 @@ fastanova_test <- function(
     data_vars <- setdiff(colnames(data), c(groups, x))
 
     re_data <- lapply(data_vars, function(var) {
-
       if (!is.null(transform_func)) {
         data <- transform_func(data[, c(groups, x, var)])
       }
