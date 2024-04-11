@@ -196,7 +196,7 @@ Separator <- R6::R6Class(
               )
             }
           ),
-          y.pt = mean + s.e
+          y.pt = mean + spread
         ) |>
         dplyr::relocate(dplyr::any_of(selection_vars), .before = dplyr::all_of(var)) |>
         dplyr::rename_with(~ ifelse(.x == "spread", self$deviation_type, .x))
